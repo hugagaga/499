@@ -4,7 +4,9 @@
 
 #include <grpcpp/grpcpp.h>
 
+#include "kvmap.h"
 #include "kvstore.grpc.pb.h"
+
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -16,40 +18,35 @@ using kvstore::PutRequest;
 using kvstore::PutReply;
 using kvstore::GetRequest;
 using kvstore::GetReply;
-using kvstore:: RemoveRequest;
-using kvstore:: RemoveReply;
+using kvstore::RemoveRequest;
+using kvstore::RemoveReply;
 
+//
 class KeyValueStoreImpl final : public KeyValueStore::Service {
  public:
   Status put(ServerContext* context, const PutRequest* request, PutReply* response) override {
-    if (db.find(request->key()) == db.end()){
-      db.insert(std::pair<std::string, std::string> (request->key(), request->value()));
-    }
+    kvstore_.put(request->key(), request->value());
     return Status::OK;
   }
 
   Status get(ServerContext* context, ServerReaderWriter<GetReply, GetRequest>* stream) override {
     GetRequest request;
     while (stream->Read(&request)) {
-      if (db.find(request.key()) != db.end()) {
-        GetReply reply;
-        reply.set_value(db[request.key()]);
-        stream->Write(reply);
-      }
+      std::string value = kvstore_.get(request.key());
+      GetReply reply;
+      reply.set_value(value);
+      stream->Write(reply);
     }
     return Status::OK;
   }
 
   Status remove(ServerContext* context, const RemoveRequest* request, RemoveReply* response) override {
-    auto pos = db.find(request->key());
-    if (pos != db.end()){
-      db.erase(pos);
-    } 
+    bool success = kvstore_.remove(request->key());
     return Status::OK;
   }
 
  private:
-  std::map<std::string, std::string> db;
+  Kvmap kvstore_;
 };
 
 void RunServer() {
