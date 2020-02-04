@@ -25,33 +25,38 @@ using kvstore::RemoveReply;
 //KeyValueStore service implimentation
 class KeyValueStoreImpl final : public KeyValueStore::Service {
  public:
-  //Call Kvmap::put(key, value) function
+  //Call Kvmap::Put(key, value) function
   Status Put(ServerContext* context, const PutRequest* request, PutReply* response) override {
     kvstore_.Put(request->key(), request->value());
+    //TODO:handle ALREADY_EXISTS status
     return Status::OK;
   }
-
-  //Call Kvmap::get(key) function
+  
+  //Call Kvmap::Get(key) function
   Status Get(ServerContext* context, ServerReaderWriter<GetReply, GetRequest>* stream) override {
     GetRequest request;
+    std::vector<Status> status;
     while (stream->Read(&request)) {
-      auto ret = kvstore_.Get(request.key());
-      std::string value = ret.first;
+      auto str = kvstore_.Get(request.key());
+      
       GetReply reply;
-      reply.set_value(value);
-      stream->Write(reply);
-      if (ret.second == 0) {
-        LOG(INFO) << "Key: " << request.key() << " Value: " << value << std::endl;
+      if (str) {
+        reply.set_value(*str);
       } else {
+        reply.set_value("");
         LOG(INFO) << "Key is not found!" << std::endl;
       }
+      stream->Write(reply);
+      //TODO:handle NOT_FOUND status
+      status.push_back(Status::OK);
     }
-    return Status::OK;
+    return status;
   }
 
-  //Call Kvmap::remove(key) function
+  //Call Kvmap::Remove(key) function
   Status Remove(ServerContext* context, const RemoveRequest* request, RemoveReply* response) override {
     bool success = kvstore_.Remove(request->key());
+    //TODO:handle NOT_FOUND status
     return Status::OK;
   }
 

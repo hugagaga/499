@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <optional>
 
 
 //A class for backend key-value store
@@ -15,10 +16,11 @@ class Kvmap {
   Kvmap(const std::vector<std::pair<std::string, std::string>>&);
   //Inserts <string, string> pair into the map
   bool Put(const std::string& key, const std::string& value);
-  //Returns a previously stored value or values under that key and true indicatin
-  //or nothing if the key is not reprent in the store
-  //return status -1: not found, 0 success
-  std::pair<std::string, int> Get(const std::string& key);
+  //Returns an optional contained value which is 
+  //present when there exits previously stored value or values under that key 
+  //not present when if the key is not reprent in the store
+  //has_value could be called to check if the returned object contains a value
+  std::optional<std::string> Get(const std::string& key);
   //deletes all previously stored values under that key
   bool Remove(const std::string& key);
 
