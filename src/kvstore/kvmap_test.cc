@@ -17,18 +17,18 @@ TEST(KvmapTest, TestGet) {
   v.push_back({"banana", "yellow"});
   v.push_back({"apple", "red"});
   Kvmap map(v);
-  EXPECT_EQ("red", map.Get("apple").first);
-  EXPECT_EQ(0, map.Get("apple").second);
-  EXPECT_EQ("yellow", map.Get("banana").first);
-  EXPECT_EQ(-1, map.Get("dog").second);
+  EXPECT_EQ("red", map.Get("apple").value());
+  EXPECT_TRUE(true, map.Get("apple"));
+  EXPECT_EQ("yellow", map.Get("banana").value());
+  EXPECT_EQ("empty", map.Get("dog").value_or("empty"));
 }
 
 //Test Put(key, value) puts <key, value> pair into the map
 TEST(PutTest, TestPut) {
   Kvmap map;
-  EXPECT_EQ(-1, map.Get("banana").second);
+  EXPECT_FALSE(map.Get("banana").has_value());
   map.Put("banana","yellow");
-  EXPECT_EQ("yellow", map.Get("banana").first);
+  EXPECT_EQ("yellow", map.Get("banana").value());
 }
 
 //Test Remove(key) Removes the value in the map, given the 
@@ -37,9 +37,9 @@ TEST(RemoveTest, TestRemove) {
   std::vector<std::pair<std::string, std::string>> v;
   v.push_back({"banana", "yellow"});
   Kvmap map(v);
-  EXPECT_EQ("yellow", map.Get("banana").first);
+  EXPECT_EQ("yellow", map.Get("banana").value());
   map.Remove("banana");
-  EXPECT_EQ(-1, map.Get("banana").second);
+  EXPECT_FALSE(map.Get("banana").has_value());
 }
 
 }  //namespace

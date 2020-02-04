@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <optional>
 
 Kvmap::Kvmap() = default;
 
@@ -17,12 +18,9 @@ bool Kvmap::Put(const std::string& key, const std::string& value) {
   return success;
 }
 
-std::pair<std::string, int> Kvmap::Get(const std::string& key) {
+std::optional<std::string> Kvmap::Get(const std::string& key) {
   bool found = kvmap_.find(key) != kvmap_.end();
-  if (!found) {
-    return {"", -1};
-  }
-  return {kvmap_[key], 0};
+  return found ? std::optional<std::string>{kvmap_[key]} : std::nullopt;
 }
 
 bool Kvmap::Remove(const std::string& key) {
