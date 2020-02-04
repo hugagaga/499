@@ -1,8 +1,10 @@
 #include <iostream>
 #include <memory>
+#include <vector>
 #include <string>
 
 #include <grpcpp/grpcpp.h>
+#include <glog/logging.h>
 
 #include "kvstore.grpc.pb.h"
 
@@ -18,10 +20,18 @@ using kvstore::GetReply;
 using kvstore::RemoveRequest;
 using kvstore::RemoveReply;
 
+//Get function return type
+struct GetReturn {
+  std::vector<std::string> values;
+  Status status;
+};
+
+//Client class for clients to use key-value store service on the server 
 class KeyValueStoreClient {
  public:
   KeyValueStoreClient(std::shared_ptr<Channel> channel) : stub_(KeyValueStore::NewStub(channel)) {}
-
+  
+  //Calls function in the server to store key-value
   Status Put(const std::string& key, const std::string& value) {
     PutRequest request;
     request.set_key(key);
@@ -29,17 +39,20 @@ class KeyValueStoreClient {
 
     PutReply reply;
     ClientContext context;
-    Status status = stub_->put(&context, request, &reply);
+    Status status = stub_->Put(&context, request, &reply);
+    
     if (!status.ok()) {
-      //TODO: use glog
-      std::cout << status.error_code() << ": " << status.error_message() << std::endl;
+      LOG(ERROR) << status.error_code() << ": " << status.error_message() << std::endl;
     }
     return status;
   }
-
-  std::string Get(const std::vector<std::string>& keys) {
+  
+  //Get the stream of values given a stream of keys from the server
+  //Returns all the values and corresponding stauts in a struct GetReturn
+  GetReturn Get(const std::vector<std::string>& keys) {
     ClientContext context;
-    auto stream = stub_->get(&context);
+    GetReturn res;
+    auto stream = stub_->Get(&context);
     for (const std::string& key : keys) {
       GetRequest request;
       request.set_key(key);
@@ -47,49 +60,64 @@ class KeyValueStoreClient {
 
       GetReply reply;
       stream->Read(&reply);
-      std::cout << key << " : " << reply.value() << std::endl;
+      res.values.push_back(reply.value());
+
+      LOG(INFO) << key << " : " << reply.value() << std::endl;
     }
     stream->WritesDone();
-    Status status = stream->Finish();
-    if (status.ok()) {
-      return "ok";
-    } else {
-      std::cout << status.error_code() << ": " << status.error_message() << std::endl;
-      return "RPC failed";
-    }
-  }
+    res.status = stream->Finish();
 
+    if (!res.status.ok()) {
+      LOG(ERROR) << res.status.error_code() << ": " << res.status.error_message() << std::endl;
+    }
+    return res;
+  }
+  
+  //Remove values associated to the key in the server
   Status Remove(const std::string& key) {
     RemoveRequest request;
     request.set_key(key);
 
     RemoveReply reply;
     ClientContext context;
-    Status status = stub_->remove(&context, request, &reply);
+    Status status = stub_->Remove(&context, request, &reply);
     if (!status.ok()) {
-      //TODO: use glog
-      std::cout << status.error_code() << ": " << status.error_message() << std::endl;
+      LOG(ERROR) << status.error_code() << ": " << status.error_message() << std::endl;
     }
     return status;
   }
 
-    private:
-     //KeyValueStore client stub to start RPC call.
-     std::unique_ptr<KeyValueStore::Stub> stub_;
+ private:
+  //KeyValueStore client stub to start RPC call.
+  std::unique_ptr<KeyValueStore::Stub> stub_;
 };
 
 int main(int argc, char** argv) {
+  //start logging
+  google::InitGoogleLogging(argv[0]);
+  //Test KVstore function on GRPC
   KeyValueStoreClient func(grpc::CreateChannel("localhost:50001", grpc::InsecureChannelCredentials()));
-  //TODO: testing code, use glog 
+  
   Status replyput = func.Put("apple", "red");
-  if (replyput.ok()) std::cout << "Put(apple, red) status: OK " << std::endl;
+  if (replyput.ok()) {
+    LOG(INFO) << "Put(apple, red) status: OK " << std::endl;
+  }
   replyput = func.Put("banana", "yellow");
-  if (replyput.ok()) std::cout << "Put(banana, yellow) status: OK " << std::endl;
+  if (replyput.ok()) {
+    LOG(INFO) << "Put(banana, yellow) status: OK " << std::endl;
+  }
   std::vector<std::string> keys {"apple", "banana"};
-  std::string replyget = func.Get(keys);
-  std::cout << "Get() status: " << replyget << std::endl;
+  GetReturn replyget = func.Get(keys);
+  if (replyget.status.ok()) {
+    LOG(INFO) << "Get [apple, banana] status: OK " << std::endl;
+  }
   Status replyrm = func.Remove("banana");
-  if (replyrm.ok()) std::cout << "Remove status: OK " << std::endl;
+  if (replyrm.ok()) {
+    LOG(INFO) << "Remove status: OK " << std::endl;
+  }
   std::vector<std::string> key {"banana"};
   replyget = func.Get(keys);
+  if (replyget.status.ok()) {
+    LOG(INFO) << "Get [banana] status: OK " << std::endl;
+  }
 }

@@ -3,6 +3,7 @@
 #include <string>
 
 #include <grpcpp/grpcpp.h>
+#include <glog/logging.h>
 
 #include "kvmap.h"
 #include "kvstore.grpc.pb.h"
@@ -21,27 +22,36 @@ using kvstore::GetReply;
 using kvstore::RemoveRequest;
 using kvstore::RemoveReply;
 
-//
+//KeyValueStore service implimentation
 class KeyValueStoreImpl final : public KeyValueStore::Service {
  public:
-  Status put(ServerContext* context, const PutRequest* request, PutReply* response) override {
-    kvstore_.put(request->key(), request->value());
+  //Call Kvmap::put(key, value) function
+  Status Put(ServerContext* context, const PutRequest* request, PutReply* response) override {
+    kvstore_.Put(request->key(), request->value());
     return Status::OK;
   }
 
-  Status get(ServerContext* context, ServerReaderWriter<GetReply, GetRequest>* stream) override {
+  //Call Kvmap::get(key) function
+  Status Get(ServerContext* context, ServerReaderWriter<GetReply, GetRequest>* stream) override {
     GetRequest request;
     while (stream->Read(&request)) {
-      std::string value = kvstore_.get(request.key());
+      auto ret = kvstore_.Get(request.key());
+      std::string value = ret.first;
       GetReply reply;
       reply.set_value(value);
       stream->Write(reply);
+      if (ret.second == 0) {
+        LOG(INFO) << "Key: " << request.key() << " Value: " << value << std::endl;
+      } else {
+        LOG(INFO) << "Key is not found!" << std::endl;
+      }
     }
     return Status::OK;
   }
 
-  Status remove(ServerContext* context, const RemoveRequest* request, RemoveReply* response) override {
-    bool success = kvstore_.remove(request->key());
+  //Call Kvmap::remove(key) function
+  Status Remove(ServerContext* context, const RemoveRequest* request, RemoveReply* response) override {
+    bool success = kvstore_.Remove(request->key());
     return Status::OK;
   }
 
@@ -49,10 +59,11 @@ class KeyValueStoreImpl final : public KeyValueStore::Service {
   Kvmap kvstore_;
 };
 
+//start the server
 void RunServer() {
+  //server running on port 50001
   std::string server_address("0.0.0.0:50001");
   KeyValueStoreImpl service;
-
   ServerBuilder builder;
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&service);
@@ -63,6 +74,8 @@ void RunServer() {
 
 
 int main(int argc, char** argv) {
+  //start logging
+  google::InitGoogleLogging(argv[0]);
   RunServer();
   return 0;
 }
