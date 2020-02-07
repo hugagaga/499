@@ -4,9 +4,10 @@
 #include <string>
 
 #include <grpcpp/grpcpp.h>
-#include <glog/logging.h>
+//#include <glog/logging.h>
 
 #include "kvstore.grpc.pb.h"
+#include "kvstore_client.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -20,104 +21,100 @@ using kvstore::GetReply;
 using kvstore::RemoveRequest;
 using kvstore::RemoveReply;
 
-//Get function return type
-struct GetReturn {
-  std::vector<std::string> values;
-  Status status;
-};
-
-//Client class for clients to use key-value store service on the server 
-class KeyValueStoreClient {
- public:
-  KeyValueStoreClient(std::shared_ptr<Channel> channel) : stub_(KeyValueStore::NewStub(channel)) {}
+KeyValueStoreClient::KeyValueStoreClient(std::shared_ptr<Channel> channel) : stub_(KeyValueStore::NewStub(channel)) {}
   
-  //Calls function in the server to store key-value
-  Status Put(const std::string& key, const std::string& value) {
-    PutRequest request;
-    request.set_key(key);
-    request.set_value(value);
+Status KeyValueStoreClient::Put(const std::string& key, const std::string& value) {
+  //LOG(INFO) << "Start to Put \n";
+  std::cout << "Run Put \n";
+  PutRequest request;
+  request.set_key(key);
+  request.set_value(value);
 
-    PutReply reply;
-    ClientContext context;
-    Status status = stub_->Put(&context, request, &reply);
-    
-    if (!status.ok()) {
-      LOG(ERROR) << status.error_code() << ": " << status.error_message() << std::endl;
-    }
-    return status;
+  PutReply reply;
+  ClientContext context;
+  Status status = stub_->Put(&context, request, &reply);
+  
+  if (status.ok()) {
+    std::cout << "Put(" << key << ", " << value << ") status: OK " << std::endl;
+  } else {
+    std::cout << status.error_code() << ": " << status.error_message() << std::endl;
   }
-  
-  //Get the stream of values given a stream of keys from the server
-  //Returns all the values and corresponding stauts in a struct GetReturn
-  GetReturn Get(const std::vector<std::string>& keys) {
-    ClientContext context;
-    GetReturn res;
-    auto stream = stub_->Get(&context);
-    for (const std::string& key : keys) {
-      GetRequest request;
-      request.set_key(key);
-      stream->Write(request);
+  return status;
+}
 
-      GetReply reply;
-      stream->Read(&reply);
-      res.values.push_back(reply.value());
+Status KeyValueStoreClient::GetOne(const std::string& key, std::vector<std::string>& values) {
+  std::cout << "Run GetOne \n";
+  ClientContext context;
+  Status status = Status::OK;
+  auto stream = stub_->Get(&context);
+  GetRequest request;
+  request.set_key(key);
+  stream->Write(request);
 
-      LOG(INFO) << key << " : " << reply.value() << std::endl;
-    }
-    stream->WritesDone();
-    res.status = stream->Finish();
-
-    if (!res.status.ok()) {
-      LOG(ERROR) << res.status.error_code() << ": " << res.status.error_message() << std::endl;
-    }
-    return res;
-  }
-  
-  //Remove values associated to the key in the server
-  Status Remove(const std::string& key) {
-    RemoveRequest request;
-    request.set_key(key);
-
-    RemoveReply reply;
-    ClientContext context;
-    Status status = stub_->Remove(&context, request, &reply);
-    if (!status.ok()) {
-      LOG(ERROR) << status.error_code() << ": " << status.error_message() << std::endl;
-    }
-    return status;
+  GetReply reply;
+  while (stream->Read(&reply)) {
+    values.push_back(reply.value());
   }
 
- private:
-  //KeyValueStore client stub to start RPC call.
-  std::unique_ptr<KeyValueStore::Stub> stub_;
-};
+  stream->WritesDone();
+  status = stream->Finish();
+
+  if (status.ok()) {
+    std::cout << "Get values of key (" << key << ") : " << std::endl;
+    for (int i = 0; i < values.size(); ++i) {
+      std::cout << values[i] << " ";
+    }
+    std::cout << std::endl;
+  }
+  else {
+    std::cout << status.error_code() << ": " << status.error_message() << std::endl;
+  }
+}
+
+std::vector<Status> KeyValueStoreClient::Get(const std::vector<std::string>& keys, std::vector<std::vector<std::string>>& values) {
+  std::cout << "Run Get \n";
+  ClientContext context;
+  std::vector<Status> status;
+  for (const std::string& key : keys) {
+    std::vector<std::string> v;
+    status.push_back(GetOne(key,v));
+  }
+  return status;
+}
+
+Status KeyValueStoreClient::Remove(const std::string& key) {
+  std::cout << "Run Remove \n";
+  RemoveRequest request;
+  request.set_key(key);
+
+  RemoveReply reply;
+  ClientContext context;
+  Status status = stub_->Remove(&context, request, &reply);
+  if (status.ok()) {
+    std::cout << "Remove values of key (" << key << ") Status : OK " << std::endl;
+  }
+  else {
+    std::cout << status.error_code() << ": " << status.error_message() << std::endl;
+  }
+  return status;
+}
 
 int main(int argc, char** argv) {
   //start logging
-  google::InitGoogleLogging(argv[0]);
+  //google::InitGoogleLogging(argv[0]);
   //Test KVstore function on GRPC
   KeyValueStoreClient func(grpc::CreateChannel("localhost:50001", grpc::InsecureChannelCredentials()));
   
-  Status replyput = func.Put("apple", "red");
-  if (replyput.ok()) {
-    LOG(INFO) << "Put(apple, red) status: OK " << std::endl;
-  }
-  replyput = func.Put("banana", "yellow");
-  if (replyput.ok()) {
-    LOG(INFO) << "Put(banana, yellow) status: OK " << std::endl;
-  }
+  func.Put("apple", "red");
+  func.Put("apple", "round");
+  func.Put("banana", "yellow");
+  //LOG(INFO) << "Start to Get \n";
   std::vector<std::string> keys {"apple", "banana"};
-  GetReturn replyget = func.Get(keys);
-  if (replyget.status.ok()) {
-    LOG(INFO) << "Get [apple, banana] status: OK " << std::endl;
-  }
-  Status replyrm = func.Remove("banana");
-  if (replyrm.ok()) {
-    LOG(INFO) << "Remove status: OK " << std::endl;
-  }
-  std::vector<std::string> key {"banana"};
-  replyget = func.Get(keys);
-  if (replyget.status.ok()) {
-    LOG(INFO) << "Get [banana] status: OK " << std::endl;
-  }
+  std::vector<std::vector<std::string>> values;
+  func.Get(keys, values);
+  //LOG(INFO) << "Start to Remove \n";
+  func.Remove("apple");
+  std::string key {"apple"};
+  std::vector<std::string> v;
+  func.GetOne(key, v);
 }

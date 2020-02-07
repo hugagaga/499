@@ -1,7 +1,7 @@
 #include "kvmap.h"
 
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <optional>
 
@@ -13,17 +13,24 @@ Kvmap::Kvmap(const std::vector<std::pair<std::string, std::string>>& list) {
   }
 }
 
-bool Kvmap::Put(const std::string& key, const std::string& value) {
-  const auto [it, success] = kvmap_.insert({key, value});
-  return success;
+void Kvmap::Put(const std::string& key, const std::string& value) {
+  kvmap_.insert({key, value});
 }
 
-std::optional<std::string> Kvmap::Get(const std::string& key) {
-  bool found = kvmap_.find(key) != kvmap_.end();
-  return found ? std::optional<std::string>{kvmap_[key]} : std::nullopt;
+std::optional<std::vector<std::string>> Kvmap::Get(const std::string& key) {
+  auto range = kvmap_.equal_range(key);
+  std::vector<std::string> values;
+  std::optional<std::vector<std::string>> ret = std::nullopt;
+  if (range.first != kvmap_.end()) {
+    for (auto it = range.first; it != range.second; ++it) {
+      values.push_back(it->second);
+    }
+    ret = std::optional<std::vector<std::string>>{values};
+  }
+  return ret;
 }
 
-bool Kvmap::Remove(const std::string& key) {
-  int success = kvmap_.erase(key);
-  return success;
+int Kvmap::Remove(const std::string& key) {
+  int num = kvmap_.erase(key);
+  return num;
 }

@@ -1,8 +1,10 @@
+#include <vector>
+
 #include <gtest/gtest.h>
 
 #include "kvmap.h"
 
-#include <vector>
+
 
 
 
@@ -16,11 +18,12 @@ TEST(KvmapTest, TestGet) {
   std::vector<std::pair<std::string, std::string>> v;
   v.push_back({"banana", "yellow"});
   v.push_back({"apple", "red"});
+  v.push_back({"apple", "round"});
   Kvmap map(v);
-  EXPECT_EQ("red", map.Get("apple").value());
-  EXPECT_TRUE(true, map.Get("apple"));
-  EXPECT_EQ("yellow", map.Get("banana").value());
-  EXPECT_EQ("empty", map.Get("dog").value_or("empty"));
+  EXPECT_TRUE(map.Get("apple"));
+  EXPECT_EQ(2, map.Get("apple").value().size());
+  EXPECT_EQ("yellow", map.Get("banana").value()[0]);
+  EXPECT_FALSE(map.Get("dog"));
 }
 
 //Test Put(key, value) puts <key, value> pair into the map
@@ -28,7 +31,7 @@ TEST(PutTest, TestPut) {
   Kvmap map;
   EXPECT_FALSE(map.Get("banana").has_value());
   map.Put("banana","yellow");
-  EXPECT_EQ("yellow", map.Get("banana").value());
+  EXPECT_EQ("yellow", map.Get("banana").value()[0]);
 }
 
 //Test Remove(key) Removes the value in the map, given the 
@@ -36,10 +39,13 @@ TEST(PutTest, TestPut) {
 TEST(RemoveTest, TestRemove) {
   std::vector<std::pair<std::string, std::string>> v;
   v.push_back({"banana", "yellow"});
+  v.push_back({"apple", "red"});
+  std::vector<std::pair<std::string, std::string>> v2(v);
+  v.push_back({"apple", "round"});
   Kvmap map(v);
-  EXPECT_EQ("yellow", map.Get("banana").value());
-  map.Remove("banana");
-  EXPECT_FALSE(map.Get("banana").has_value());
+  EXPECT_TRUE(map.Get("apple"));
+  EXPECT_EQ(2, map.Remove("apple"));
+  EXPECT_EQ(std::nullopt, map.Get("apple"));
 }
 
 }  //namespace

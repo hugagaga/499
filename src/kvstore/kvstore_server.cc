@@ -5,8 +5,9 @@
 #include <grpcpp/grpcpp.h>
 #include <glog/logging.h>
 
-#include "kvmap.h"
 #include "kvstore.grpc.pb.h"
+#include "kvmap.h"
+#include "kvstore_server.h"
 
 
 using grpc::Server;
@@ -22,47 +23,49 @@ using kvstore::GetReply;
 using kvstore::RemoveRequest;
 using kvstore::RemoveReply;
 
-//KeyValueStore service implimentation
-class KeyValueStoreImpl final : public KeyValueStore::Service {
- public:
-  //Call Kvmap::Put(key, value) function
-  Status Put(ServerContext* context, const PutRequest* request, PutReply* response) override {
-    kvstore_.Put(request->key(), request->value());
-    //TODO:handle ALREADY_EXISTS status
-    return Status::OK;
-  }
-  
-  //Call Kvmap::Get(key) function
-  Status Get(ServerContext* context, ServerReaderWriter<GetReply, GetRequest>* stream) override {
-    GetRequest request;
-    std::vector<Status> status;
-    while (stream->Read(&request)) {
-      auto str = kvstore_.Get(request.key());
+Status KeyValueStoreImpl::Put(ServerContext* context, const PutRequest* request, PutReply* response) {
+  kvstore_.Put(request->key(), request->value());
+  //LOG(INFO) << "Put(" << request->key() << ", " << request->value() << ") status: OK " << std::endl;
+  std::cout << "Put(" << request->key() << ", " << request->value() << ") status: OK " << std::endl;
+  return Status::OK;
+}
+
+Status KeyValueStoreImpl::Get(ServerContext* context, ServerReaderWriter<GetReply, GetRequest>* stream) {
+  GetRequest request;
+  Status status = Status::OK;
+  while (stream->Read(&request)) {
+    auto strs = kvstore_.Get(request.key());
       
-      GetReply reply;
-      if (str) {
-        reply.set_value(*str);
-      } else {
-        reply.set_value("");
-        LOG(INFO) << "Key is not found!" << std::endl;
+    GetReply reply;
+    if (strs.has_value()) {
+      auto values = *strs;
+      std::cout << "Get values of key (" << request.key() << ") : " << std::endl;
+      for (const std::string& str : values) {
+        std::cout << str << " ";
+        reply.set_value(str);
+        stream->Write(reply);
       }
+      std::cout << std::endl;
+    } else {
+      reply.set_value("");
       stream->Write(reply);
-      //TODO:handle NOT_FOUND status
-      status.push_back(Status::OK);
+      //LOG(INFO) << "Key is not found!" << std::endl;
+      grpc::string error_string("The key is not found!");
+      status = Status(grpc::StatusCode::NOT_FOUND, error_string);
     }
-    return status;
   }
+  return status;
+}
 
-  //Call Kvmap::Remove(key) function
-  Status Remove(ServerContext* context, const RemoveRequest* request, RemoveReply* response) override {
-    bool success = kvstore_.Remove(request->key());
-    //TODO:handle NOT_FOUND status
-    return Status::OK;
+Status KeyValueStoreImpl::Remove(ServerContext* context, const RemoveRequest* request, RemoveReply* response) {
+  Status status = Status::OK;
+  bool success = kvstore_.Remove(request->key());
+  if (!success) {
+    grpc::string error_string("The key is not found!");
+    status = Status(grpc::StatusCode::NOT_FOUND, error_string);
   }
-
- private:
-  Kvmap kvstore_;
-};
+  return status;
+}
 
 //start the server
 void RunServer() {
@@ -74,13 +77,15 @@ void RunServer() {
   builder.RegisterService(&service);
   std::unique_ptr<Server> server(builder.BuildAndStart());
   std::cout << "Server listening on " << server_address << std::endl;
+  //LOG(INFO) << "Server listening on " << server_address << std::endl;
   server->Wait();
 }
 
 
 int main(int argc, char** argv) {
   //start logging
-  google::InitGoogleLogging(argv[0]);
+  //google::InitGoogleLogging(argv[0]);
+  //LOG(INFO) << "Run Server" << std::endl;
   RunServer();
   return 0;
 }
