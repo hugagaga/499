@@ -25,8 +25,7 @@ using kvstore::RemoveReply;
 
 Status KeyValueStoreImpl::Put(ServerContext* context, const PutRequest* request, PutReply* response) {
   kvstore_.Put(request->key(), request->value());
-  //LOG(INFO) << "Put(" << request->key() << ", " << request->value() << ") status: OK " << std::endl;
-  std::cout << "Put(" << request->key() << ", " << request->value() << ") status: OK " << std::endl;
+  LOG(INFO) << "Put(" << request->key() << ", " << request->value() << ") status: OK " << std::endl;
   return Status::OK;
 }
 
@@ -37,19 +36,23 @@ Status KeyValueStoreImpl::Get(ServerContext* context, ServerReaderWriter<GetRepl
     auto strs = kvstore_.Get(request.key());
       
     GetReply reply;
+    int size = 0;
     if (strs.has_value()) {
       auto values = *strs;
-      std::cout << "Get values of key (" << request.key() << ") : " << std::endl;
+      LOG(INFO) << "Get values of key (" << request.key() << ") : " << std::endl;
+      size = values.size();
+      reply.set_value(std::to_string(size));
+      stream->Write(reply);
       for (const std::string& str : values) {
-        std::cout << str << " ";
+        LOG(INFO) << str << " ";
         reply.set_value(str);
         stream->Write(reply);
       }
-      std::cout << std::endl;
+      LOG(INFO) << std::endl;
     } else {
-      reply.set_value("");
+      reply.set_value(std::to_string(size));
       stream->Write(reply);
-      //LOG(INFO) << "Key is not found!" << std::endl;
+      LOG(ERROR) << "Key is not found!" << std::endl;
       grpc::string error_string("The key is not found!");
       status = Status(grpc::StatusCode::NOT_FOUND, error_string);
     }
@@ -58,11 +61,13 @@ Status KeyValueStoreImpl::Get(ServerContext* context, ServerReaderWriter<GetRepl
 }
 
 Status KeyValueStoreImpl::Remove(ServerContext* context, const RemoveRequest* request, RemoveReply* response) {
+  LOG(INFO) << "Remove values of key (" << request->key() << ")" << std::endl;
   Status status = Status::OK;
   bool success = kvstore_.Remove(request->key());
   if (!success) {
     grpc::string error_string("The key is not found!");
     status = Status(grpc::StatusCode::NOT_FOUND, error_string);
+    LOG(ERROR) << "Key is not found!" << std::endl;
   }
   return status;
 }
@@ -76,16 +81,15 @@ void RunServer() {
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&service);
   std::unique_ptr<Server> server(builder.BuildAndStart());
-  std::cout << "Server listening on " << server_address << std::endl;
-  //LOG(INFO) << "Server listening on " << server_address << std::endl;
+  LOG(INFO) << "Server listening on " << server_address << std::endl;
   server->Wait();
 }
 
 
 int main(int argc, char** argv) {
   //start logging
-  //google::InitGoogleLogging(argv[0]);
-  //LOG(INFO) << "Run Server" << std::endl;
+  google::InitGoogleLogging(argv[0]);
+  LOG(INFO) << "Run Server" << std::endl;
   RunServer();
   return 0;
 }

@@ -7,7 +7,7 @@
 
 Kvmap::Kvmap() = default;
 
-Kvmap::Kvmap(const std::vector<std::pair<std::string, std::string>>& list) {
+void Kvmap::KvmapSetup(const std::vector<std::pair<std::string, std::string>>& list) {
   for (const auto& p : list) {
     kvmap_.insert(p);
   }
