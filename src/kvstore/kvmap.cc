@@ -1,13 +1,14 @@
 #include "kvmap.h"
 
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <optional>
 
 Kvmap::Kvmap() = default;
 
-void Kvmap::KvmapSetup(const std::vector<std::pair<std::string, std::string>>& list) {
+void Kvmap::KvmapSetup(
+    const std::vector<std::pair<std::string, std::string>>& list) {
   for (const auto& p : list) {
     kvmap_.insert(p);
   }
