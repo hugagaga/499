@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <vector>
 
+namespace kvstore {
+  
 Kvmap::Kvmap() = default;
 
 void Kvmap::KvmapSetup(
@@ -35,3 +37,5 @@ int Kvmap::Remove(const std::string& key) {
   int num = kvmap_.erase(key);
   return num;
 }
+
+}  // namespace kvstore

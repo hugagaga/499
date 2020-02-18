@@ -6,8 +6,8 @@
 
 #include <grpcpp/grpcpp.h>
 
-#include "kvmap.h"
 #include "kvstore.grpc.pb.h"
+#include "kvmap.h"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -37,10 +37,10 @@ class KeyValueStoreImpl final : public KeyValueStore::Service {
 
  private:
   // Kvmap objects that contains kvstore functions
-  Kvmap kvstore_;
+  kvstore::Kvmap kvstore_;
 };
 
 // Run the server
 void RunServer();
 
-#endif  // WARBLE_KVSTORE_CLIENT_H_
+#endif  // WARBLE_KVSTORE_SERVER_H_

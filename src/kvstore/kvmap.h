@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace {
+namespace kvstore{
 // A class for backend key-value store
 class Kvmap {
  public:
@@ -25,6 +25,7 @@ class Kvmap {
   int Remove(const std::string& key);
 
  private:
+  // A multimap as a database 
   std::unordered_multimap<std::string, std::string> kvmap_;
 };
 }  // namespace

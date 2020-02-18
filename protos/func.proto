@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package func;
 
+import "google/protobuf/any.proto";
+
 // Associates this type of event with the given function for future execution by Func.
 message HookRequest {
   // An arbitrary int that is unique to this type of event
@@ -14,8 +16,7 @@ message HookReply {
   // Empty because success/failure is signaled via GRPC status.
 }
 
-// Unregisters an event of the given type, if registered. Has no effect if already
-unregistered.
+// Unregisters an event of the given type, if registered. Has no effect if already unregistered.
 message UnhookRequest {
   int32 event_type = 1;
 }
@@ -36,7 +37,7 @@ message EventReply {
 }
 
 service FuncService {
-  rpc hook (HookRequest) returns (HookReply) {}
-  rpc unhook (UnhookRequest) returns (UnhookReply) {}
-  rpc event (EventRequest) returns (EventReply) {}
+  rpc Hook (HookRequest) returns (HookReply) {}
+  rpc Unhook (UnhookRequest) returns (UnhookReply) {}
+  rpc Event (EventRequest) returns (EventReply) {}
 }
