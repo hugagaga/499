@@ -28,7 +28,8 @@ Status FuncImpl::Hook(ServerContext* context, const HookRequest* request,
                       HookReply* response) {
   Status status = Status::OK;
   int event = request->event_type();
-  if (event < EventNum) {
+  bool isInRange = event < EventType::EVENT_MAX && event > EventType::EVENT_MIN;
+  if (isInRange) {
     EventType e = static_cast<EventType>(event);
     if (func_.IsHooked(e)) {
       grpc::string error_string("The event type is already hooked!");
@@ -52,7 +53,8 @@ Status FuncImpl::Unhook(ServerContext* context, const UnhookRequest* request,
                         UnhookReply* response) {
   Status status = Status::OK;
   int event = request->event_type();
-  if (event < EventNum) {
+  bool isInRange = event < EventType::EVENT_MAX && event > EventType::EVENT_MIN;
+  if (isInRange) {
     EventType e = static_cast<EventType>(event);
     if (!func_.IsHooked(e)) {
       grpc::string error_string("The event type is not hooked!");
@@ -76,7 +78,8 @@ Status FuncImpl::Event(ServerContext* context, const EventRequest* request,
                        EventReply* response) {
   Status status = Status::OK;
   int event = request->event_type();
-  if (event < EventNum) {
+  bool isInRange = event < EventType::EVENT_MAX && event > EventType::EVENT_MIN;
+  if (isInRange) {
     EventType e = static_cast<EventType>(event);
     google::protobuf::Message* message;
     request->payload().UnpackTo(message);

@@ -10,10 +10,8 @@
 
 namespace func {
 
-//The number of events
-const int EventNum = 5;
 // All event types the func layer deal with
-enum EventType { REGISTER_USER, WARBLE, FOLLOW, READ, PROFILE };
+enum class EventType { EVENT_MIN, REGISTER_USER, WARBLE, FOLLOW, READ, PROFILE, EVENT_MAX };
 
 // Func Faas infrastructure
 class FuncInfra {
@@ -32,7 +30,7 @@ class FuncInfra {
   // A set of all registered event types
   std::unordered_set<EventType> list_;
   // A map to map all event types to functions
-  std::unordered_map<EventType, std::function<void()>> map_;
+  std::unordered_map<EventType, std::function<google::protobuf::Message*(google::protobuf::Message*)>> map_;
 };
 
 }  // namespace func
