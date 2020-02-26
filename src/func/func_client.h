@@ -14,9 +14,10 @@
 using grpc::Channel;
 using grpc::Status;
 using func::FuncService;
+using google::protobuf::Message
 
 // Client class for clients to use key-value store service on the server
-class KeyValueStoreClient {
+class FuncClient {
  public:
   FuncClient(std::shared_ptr<Channel> channel);
   // Hook a function for the event Type
@@ -24,10 +25,10 @@ class KeyValueStoreClient {
   // Unhook a function for the event Type
   Status Unhook(const EventType& e);
   // Execute a function for the event type given the input(s)
-  Status Event(const EventType& e, ::google::protobuf::Message);
+  Status Event(const EventType& e, const Message& input, Message& output);
 
  private:
-  // KeyValueStore client stub to start RPC call.
+  // FuncService client stub to start RPC call.
   std::unique_ptr<KeyValueStore::Stub> stub_;
 };
 

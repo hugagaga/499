@@ -36,7 +36,7 @@ all: func_server
 func_client: func.pb.o func.grpc.pb.o func_client.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-func_server: func_infra.o func.pb.o func.grpc.pb.o func_server.o 
+func_server: func_infra.o func.pb.o func.grpc.pb.o func_server.o ../kvstore/kvstore_client.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 func_infra_test: kvmap.o kvmap_test.o 

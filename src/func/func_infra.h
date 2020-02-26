@@ -28,9 +28,9 @@ class FuncInfra {
 
  private:
   // A set of all registered event types
-  std::unordered_set<EventType> list_;
+  std::unordered_set<EventType> registeredList_;
   // A map to map all event types to functions
-  std::unordered_map<EventType, std::function<google::protobuf::Message*(google::protobuf::Message*)>> map_;
+  std::unordered_map<EventType, std::function<google::protobuf::Message* (google::protobuf::Message*)>> map_;
 };
 
 }  // namespace func

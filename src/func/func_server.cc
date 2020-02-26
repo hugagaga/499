@@ -10,7 +10,6 @@
 #include "func.grpc.pb.h"
 #include "func_infra.h"
 
-using func::EventNum;
 using func::EventReply;
 using func::EventRequest;
 using func::EventType;

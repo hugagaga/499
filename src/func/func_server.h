@@ -8,6 +8,7 @@
 
 #include "func.grpc.pb.h"
 #include "func_infra.h"
+#include "../kvstore/kvstore_client.h"
 
 using func::EventReply;
 using func::EventRequest;
