@@ -1,3 +1,5 @@
+#include "kvstore_server.h"
+
 #include <iostream>
 #include <memory>
 #include <string>
@@ -5,9 +7,9 @@
 #include <glog/logging.h>
 #include <grpcpp/grpcpp.h>
 
-#include "kvmap.h"
 #include "kvstore.grpc.pb.h"
-#include "kvstore_server.h"
+#include "kvmap.h"
+
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -66,13 +68,14 @@ Status KeyValueStoreImpl::Get(
 Status KeyValueStoreImpl::Remove(ServerContext* context,
                                  const RemoveRequest* request,
                                  RemoveReply* response) {
-  LOG(INFO) << "Remove values of key (" << request->key() << ")" << std::endl;
   Status status = Status::OK;
   bool success = kvstore_.Remove(request->key());
   if (!success) {
     grpc::string error_string("The key is not found!");
     status = Status(grpc::StatusCode::NOT_FOUND, error_string);
     LOG(ERROR) << "Key is not found!" << std::endl;
+  } else {
+    LOG(INFO) << "Remove values of key (" << request->key() << ")" << std::endl;
   }
   return status;
 }

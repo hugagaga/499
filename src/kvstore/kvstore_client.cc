@@ -1,3 +1,5 @@
+#include "kvstore_client.h"
+
 #include <iostream>
 #include <memory>
 #include <string>
@@ -5,9 +7,8 @@
 
 #include <glog/logging.h>
 #include <grpcpp/grpcpp.h>
-
 #include "kvstore.grpc.pb.h"
-#include "kvstore_client.h"
+
 
 using grpc::Channel;
 using grpc::ClientContext;
