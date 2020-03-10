@@ -5,32 +5,39 @@
 #include <unordered_set>
 #include <functional>
 
+#include "func.grpc.pb.h"
 #include <google/protobuf/message.h>
-#include "functions.h"
+#include "warble_func.h"
+
+using google::protobuf::Message;
+using google::protobuf::Any;
 
 namespace func {
 
 // All event types the func layer deal with
-enum class EventType { EVENT_MIN, REGISTER_USER, WARBLE, FOLLOW, READ, PROFILE, EVENT_MAX };
+enum class EventType { REGISTER_USER, WARBLE, FOLLOW, READ, PROFILE };
 
 // Func Faas infrastructure
 class FuncInfra {
  public:
+  // Initialize the EventType to function map 
+  void Init();
   // Hook a specific function for a input event type
-  void Hook(EventType e);
+  void Hook(const EventType& e);
   // Unhook a specific function for a input event type
-  void Unhook(EventType e);
+  void Unhook(const EventType& e);
   // Helper function to check if a function is hooked
-  bool IsHooked(EventType e);
+  bool IsHooked(const EventType& e);
   // Invoke a specific function to deal with a input event type
-  // Returns the status of execution
-  int EventHandler(EventType e, const google::protobuf::Message*);
+  void EventHandler(const EventType& e, Any input, Any& output);
 
  private:
   // A set of all registered event types
-  std::unordered_set<EventType> list_;
+  std::unordered_set<EventType> registeredList_;
   // A map to map all event types to functions
-  std::unordered_map<EventType, std::function<google::protobuf::Message*(google::protobuf::Message*)>> map_;
+  std::unordered_map<EventType, std::function<Any (Any)>> map_;
+  // A client who can Hook and Unhook functions in func layer and has functions implemented.
+  warble::Functions client_;
 };
 
 }  // namespace func

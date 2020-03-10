@@ -9,6 +9,7 @@
 #include "func.grpc.pb.h"
 #include "func_infra.h"
 
+
 using func::EventReply;
 using func::EventRequest;
 using func::FuncService;
@@ -24,6 +25,8 @@ using grpc::Status;
 // Func service implimentations
 class FuncImpl final : public FuncService::Service {
  public:
+  // Initialization
+  void Init();
   // Call FuncInfra::Hook(EventType) function
   Status Hook(ServerContext* context, const HookRequest* request,
               HookReply* response) override;

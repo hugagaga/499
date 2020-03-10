@@ -109,6 +109,7 @@ Status KeyValueStoreClient::Remove(const std::string& key) {
   return status;
 }
 
+/* For testing
 int main(int argc, char** argv) {
   // start logging
   google::InitGoogleLogging(argv[0]);
@@ -127,3 +128,4 @@ int main(int argc, char** argv) {
   std::vector<std::string> v;
   func.GetOne(key, v);
 }
+*/
