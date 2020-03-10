@@ -26,9 +26,10 @@ using kvstore::RemoveRequest;
 
 Status KeyValueStoreImpl::Put(ServerContext* context, const PutRequest* request,
                               PutReply* response) {
+  std::cout << "Put(" << request->key() << ", " << request->value() << ")" << std::endl;
+  LOG(INFO) << "Put(" << request->key() << ", " << request->value() << ")" << std::endl;
   kvstore_.Put(request->key(), request->value());
-  LOG(INFO) << "Put(" << request->key() << ", " << request->value()
-            << ") status: OK " << std::endl;
+  LOG(INFO) << "Status: OK " << std::endl;
   return Status::OK;
 }
 
@@ -89,12 +90,14 @@ void RunServer() {
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&service);
   std::unique_ptr<Server> server(builder.BuildAndStart());
+  std::cout << "Server listening on " << server_address << std::endl;
   LOG(INFO) << "Server listening on " << server_address << std::endl;
   server->Wait();
 }
 
 int main(int argc, char** argv) {
   // start logging
+  FLAGS_log_dir = "/499/log";
   google::InitGoogleLogging(argv[0]);
   LOG(INFO) << "Run Server" << std::endl;
   RunServer();

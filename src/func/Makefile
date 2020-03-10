@@ -3,6 +3,7 @@ SYSTEM ?= $(HOST_SYSTEM)
 CXX = g++
 CPPFLAGS += `pkg-config --cflags protobuf grpc`
 CXXFLAGS += -std=c++17
+CXXFLAGS += -g
 ifeq ($(SYSTEM),Darwin)
 LDFLAGS += -L/usr/local/lib `pkg-config --libs protobuf grpc++`\
 					 -pthread\
@@ -25,21 +26,36 @@ GOOGLE_TEST_INCLUDE = /usr/local/include
 G++_FLAGS = -c -Wall -I $(GOOGLE_TEST_INCLUDE)
 TEST_LD_FLAGS = -L /usr/local/lib -l $(GOOGLE_TEST_LIB) -l pthread
 
-
-
 PROTOS_PATH = ../../protos
+
+server_objects = ../kvstore/kvstore.pb.o\
+				 ../kvstore/kvstore.grpc.pb.o\
+				 ../kvstore/kvstore_client.o\
+				 func.pb.o\
+				 func.grpc.pb.o\
+				 func_server.o\
+				 warble.pb.o\
+				 warble.grpc.pb.o\
+				 func_infra.o\
+				 warble_func.o
+				
+				 
+				 
 
 vpath %.proto $(PROTOS_PATH)
 
-all: func_server 
+all: warble.pb.cc warble.grpc.pb.cc func_server
 
-func_client: func.pb.o func.grpc.pb.o func_client.o
+warble.grpc.pb.cc:
+	$(PROTOC) -I $(PROTOS_PATH) --grpc_out=. --plugin=protoc-gen-grpc=$(GRPC_CPP_PLUGIN_PATH) warble.proto
+
+warble.pb.cc:
+	$(PROTOC) -I $(PROTOS_PATH) --cpp_out=. warble.proto
+
+func_server: $(server_objects)
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-func_server: func_infra.o func.pb.o func.grpc.pb.o func_server.o 
-	$(CXX) $^ $(LDFLAGS) -o $@
-
-func_infra_test: kvmap.o kvmap_test.o 
+func_infra_test: func_infra.o func_infra_test.o 
 	$(CXX) -o $@ $^ $(TEST_LD_FLAGS)
 
 .PRECIOUS: %.grpc.pb.cc
