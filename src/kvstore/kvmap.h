@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <mutex>
 
 namespace kvstore{
 // A class for backend key-value store
@@ -27,6 +28,8 @@ class Kvmap {
  private:
   // A multimap as a database 
   std::unordered_multimap<std::string, std::string> kvmap_;
+  // Make the kvmap_ thread safe
+  std::mutex mutex_;
 };
 }  // namespace
 #endif  // WARBLE_KVSTORE_H_

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <optional>
 
 #include <glog/logging.h>
 #include <google/protobuf/message.h>
@@ -23,6 +24,7 @@ using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
+using google::protobuf::Any;
 
 void FuncImpl::Init() {
   func_.Init();
@@ -67,13 +69,19 @@ Status FuncImpl::Event(ServerContext *context, const EventRequest *request,
                        EventReply *response) {
   Status status = Status::OK;
   int event = request->event_type();
-  std::cout << "Start to handle event" << event << std::endl;
   LOG(INFO) << "Start to handle event" << event << std::endl;
   EventType e = static_cast<EventType>(event);
   google::protobuf::Any input = request->payload();
-  google::protobuf::Any* output = new google::protobuf::Any();
-  func_.EventHandler(e, input, *output);
-  response->set_allocated_payload(output);
+  std::optional<Any>output_opt;
+  func_.EventHandler(e, input, output_opt);
+  if(!output_opt.has_value()) {
+    grpc::string error_string("Can not handle Event!");
+    LOG(ERROR) << "Can not handle Event " << event << std::endl;
+    status = Status(grpc::StatusCode::INVALID_ARGUMENT, error_string);
+  } else {
+    Any* output = new Any(output_opt.value());
+    response->set_allocated_payload(output);
+  }
   return status;
 }
 

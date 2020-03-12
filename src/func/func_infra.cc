@@ -2,6 +2,8 @@
 
 #include <functional>
 #include <unordered_set>
+#include <optional>
+#include <mutex>
 
 #include <google/protobuf/message.h>
 #include "warble_func.h"
@@ -18,23 +20,36 @@ namespace func {
 
 void FuncInfra::Init() {
   client_.Init();
-  std::function registeruser = [&](Any input) -> Any { return client_.RegisterUser(input);};
+  std::function registeruser = [&](Any input) -> std::optional<Any> { return client_.RegisterUser(input);};
   map_.insert(std::make_pair(EventType::REGISTER_USER, registeruser));
-  std::function warble = [&](Any input) -> Any { return client_.Warble(input);};
+  std::function warble = [&](Any input) -> std::optional<Any> { return client_.Warble(input);};
   map_.insert(std::make_pair(EventType::WARBLE, warble));
+  std::function follow = [&](Any input) -> std::optional<Any> { return client_.Follow(input);};
+  map_.insert(std::make_pair(EventType::FOLLOW, follow));
+  std::function read = [&](Any input) -> std::optional<Any> { return client_.Read(input);};
+  map_.insert(std::make_pair(EventType::READ, read));
+  std::function profile = [&](Any input) -> std::optional<Any> { return client_.Profile(input);};
+  map_.insert(std::make_pair(EventType::PROFILE, profile));
 }
 
-void FuncInfra::Hook(const EventType& e) { registeredList_.insert(e); }
+void FuncInfra::Hook(const EventType& e) { 
+  const std::lock_guard<std::mutex> lock(mutex_);
+  registeredList_.insert(e); 
+}
 
-void FuncInfra::Unhook(const EventType& e) { registeredList_.erase(e); }
+void FuncInfra::Unhook(const EventType& e) { 
+  const std::lock_guard<std::mutex> lock(mutex_);
+  registeredList_.erase(e); 
+}
 
 bool FuncInfra::IsHooked(const EventType& e) {
-  return registeredList_.find(e) != registeredList_.end();
+  const std::lock_guard<std::mutex> lock(mutex_);
+  return (registeredList_.find(e) != registeredList_.end());
 }
 
-void FuncInfra::EventHandler(const EventType& e, Any input, Any& output) {
+void FuncInfra::EventHandler(const EventType& e, Any input, std::optional<Any>& output) {
   if (IsHooked(e)) {
-    std::function<Any(Any)> callback = map_[e]; 
+    std::function<std::optional<Any>(Any)> callback = map_[e]; 
     output = callback(input);
   }
 }

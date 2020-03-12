@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <functional>
+#include <mutex>
 
 #include "func.grpc.pb.h"
 #include <google/protobuf/message.h>
@@ -29,15 +30,17 @@ class FuncInfra {
   // Helper function to check if a function is hooked
   bool IsHooked(const EventType& e);
   // Invoke a specific function to deal with a input event type
-  void EventHandler(const EventType& e, Any input, Any& output);
+  void EventHandler(const EventType& e, Any input, std::optional<Any>& output);
 
  private:
   // A set of all registered event types
   std::unordered_set<EventType> registeredList_;
   // A map to map all event types to functions
-  std::unordered_map<EventType, std::function<Any (Any)>> map_;
+  std::unordered_map<EventType, std::function<std::optional<Any> (Any)>> map_;
   // A client who can Hook and Unhook functions in func layer and has functions implemented.
   warble::Functions client_;
+  // Make registeredList_ thread safe
+  std::mutex mutex_;
 };
 
 }  // namespace func

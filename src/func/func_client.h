@@ -26,8 +26,6 @@ class FuncClient {
   FuncClient(std::shared_ptr<Channel> channel);
   // Hook a function for the event Type
   Status Hook(const EventType& e);
-  // Hook all functions
-  Status HookAll();
   // Unhook a function for the event Type
   Status Unhook(const EventType& e);
   // Execute a function for the event type given the input(s)

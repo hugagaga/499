@@ -2,43 +2,37 @@
 #define WARBLE_FUNCTIONS_H_
 
 #include <string>
+#include <optional>
 
+#include <google/protobuf/message.h>
+#include "../kvstore/kvstore_client.h"
 #include "func.grpc.pb.h"
 #include "warble.grpc.pb.h"
 #include "warble.pb.h"
-#include <google/protobuf/message.h>
-#include "../kvstore/kvstore_client.h"
 
-using google::protobuf::Message;
 using google::protobuf::Any;
+using google::protobuf::Message;
 
 namespace warble {
-
-struct key {
-  std::string username;
-  std::string type;
-  std::string value;
-};
-
 class Functions {
  public:
   // Initialization
   void Init();
-  // Convert struct key to string
-  std::string structToString(key key);
-  // Convert string to struct key
-  key stringToStruct(std::string str);
-  // Inserts a (Username, UserID) pair to the kvstore backend
-  Any RegisterUser(Any);
-  // Post a new warble(or reply), returns the id of the new warble
-  Any Warble(Any);
-  // Starts following a given user
-  Any Follow(Any);
-  // Reads a warble thread from the given id
-  Any Read(Any);
+  // protobuf message warble::Key {username, type, id}
+  // Inserts a Serialized (warble::Key, username) pair to the kvstore backend
+  std::optional<Any> RegisterUser(Any);
+  // Post a new warble(or reply), returns the new warble in warble::Warble
+  std::optional<Any> Warble(Any);
+  // Starts following a given user, 
+  // insert ({target_username, type = "followers"}, username)
+  // and ({username, type = "following"}, target_username)
+  std::optional<Any> Follow(Any);
+  // Reads a warble thread from the given id, recursively read child threads if exist. 
+  std::optional<Any> Read(Any);
   // Returns this user's following and followers
-  Any Profile(Any);
-
+  std::optional<Any> Profile(Any);
+  // Check if a user exists
+  bool hasUser(std::string username);
  private:
   // warble id counter
   int currentWarbleid_;

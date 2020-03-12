@@ -45,6 +45,7 @@ message FollowReply {
 
 message ReadRequest {
   bytes warble_id = 1;  // The ID of the warble to start the read at.
+  string user = 2;
 }
 
 message ReadReply {
@@ -58,4 +59,10 @@ message ProfileRequest {
 message ProfileReply {
   repeated string followers = 1;
   repeated string following = 2;
+}
+
+message Key {
+  string username = 1; //username
+  string type = 2;  // The type of value to be stored in the kvmap
+  bytes id = 3;  // Warble id if type is a Warble
 }

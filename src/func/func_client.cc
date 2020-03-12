@@ -36,7 +36,6 @@ Status FuncClient::Hook(const EventType& e) {
   request.set_event_type(event);
   HookReply reply;
   ClientContext context;
-  std::cout << "Start to Hook(" << event << ")" << std::endl;
   LOG(INFO) << "Start to Hook(" << event << ")" << std::endl;
   Status status  = stub_->Hook(&context, request, &reply);
   if (status.ok()) {
@@ -46,14 +45,6 @@ Status FuncClient::Hook(const EventType& e) {
                << std::endl;
   }
   return status;
-}
-
-Status FuncClient::HookAll() {
-  Hook(EventType::FOLLOW);
-  Hook(EventType::PROFILE);
-  Hook(EventType::READ);
-  Hook(EventType::REGISTER_USER);
-  Hook(EventType::WARBLE);
 }
 
 Status FuncClient::Unhook(const EventType& e) {
@@ -80,7 +71,9 @@ Status FuncClient::Event(const EventType& e, Any* input, Any* output) {
   EventReply reply;
   ClientContext context;
   Status status = stub_->Event(&context, request, &reply);
+  
   if (status.ok()) {
+    output->CopyFrom(reply.payload());
     LOG(INFO) << "Evant(" << event << ") status: OK " << std::endl;
   } else {
     LOG(ERROR) << status.error_code() << ": " << status.error_message()
