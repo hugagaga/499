@@ -76,12 +76,18 @@ A Twitter-like command line C++ application built on the Faas Platform that comm
     cd /src
     make
 ### Run/Test code
-1. Start back-end Key-Value Store Server   
+1. Start back-end Key-Value Store Server
+'''
     ./kvstore/kvstore_server
+'''
 2. Start Faas platform Fuuc Server  
+'''
     ./func/func_server  
+'''
 3. Run Warble command line tool  
-    ./warble/warble
+'''
+    ./warble/warble (--flag args)
+'''
 #### Warble Command Line Flags Usage  
 (The order of flags does not matter.)
 * --registeruser (username)  
