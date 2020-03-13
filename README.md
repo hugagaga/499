@@ -14,7 +14,7 @@ A Twitter-like command line C++ application built on the Faas Platform that comm
     3. Access Vagrant virtual environment
         vagrant ssh
 ### **Library Installation**
-#### Install [gRPC](https://github.com/grpc/grpc/tree/v1.25.x) and submodules  
+#### Install [gRPC](https://github.com/grpc/grpc/) and submodules  
 ##### Install pkg-config:  
     sudo apt-get update  
     sudo apt-get install pkg-config
@@ -58,3 +58,50 @@ A Twitter-like command line C++ application built on the Faas Platform that comm
     // On another terminal connect to virtual environment using "vagrant ssh" or using tmux
     ./greeter_client // Shows "Greeter received: Hello world
 
+#### Install glog
+    sudo apt-get install libgoogle-glog-dev  
+#### Install gtest
+    sudo apt-get install libgtest-dev
+    // Install CMake
+    sudo apt-get install cmake 
+    // Compile
+    cd /usr/src/gtest
+    sudo cmake CMakeLists.txt
+    sudo make
+    // copy or symlink libgtest.a and libgtest_main.a to your /usr/lib folder
+    sudo cp *.a /usr/lib
+## **Usage**
+### Clone repository
+### Build code  
+    cd /src
+    make
+### Run/Test code
+1. Start back-end Key-Value Store Server   
+    ./kvstore/kvstore_server
+2. Start Faas platform Fuuc Server  
+    ./func/func_server  
+3. Run Warble command line tool  
+    ./warble/warble
+#### Warble Command Line Flags Usage  
+(The order of flags does not matter.)
+* --registeruser (username)  
+Register a user by a unique username
+* --warble (text) --user (username)   
+Returns posted warble information including
+    * Username
+    * Wable id
+    * Time
+    * Content
+* --warble (text) --user (username) --reply (warble id)  
+Returns posted warble information including
+    * Username
+    * Wable id
+    * Parent warble id
+    * Time
+    * Content
+* --follow (username) --user (username)  
+Follow a user by username
+* --read (warble id) --user (username)  
+Read a thread of warbles start with a warble of (warble id)
+* --profile --user (username)  
+Shows a user's following and followers by username
