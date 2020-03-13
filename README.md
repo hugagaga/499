@@ -115,3 +115,7 @@ Follow a user by username
 Read a thread of warbles start with a warble of (warble id)
 * --profile --user (username)  
 Shows a user's following and followers by username
+### Unit Tests Directory
+* src/kvstore/kvmap_test.cc
+* src/func/warble_func_test.cc
+* src/func/func_infra_test.cc
