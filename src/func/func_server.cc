@@ -101,7 +101,6 @@ void RunServer() {
 
 int main(int argc, char **argv) {
   // start logging
-  FLAGS_log_dir = "/499/log";
   google::InitGoogleLogging(argv[0]);
   LOG(INFO) << "Run Server" << std::endl;
   RunServer();

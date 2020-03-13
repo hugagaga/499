@@ -20,7 +20,7 @@ class KvmapTest : public ::testing::Test {
     map.KvmapSetup(v);
   }
 
-  Kvmap map;
+  kvstore::Kvmap map;
 };
 
 // Test if Get(key)
@@ -40,7 +40,7 @@ TEST_F(KvmapTest, GetNonExistingValue) { ASSERT_FALSE(map.Get("dog")); }
 
 // Test Put(key, value) puts <key, value> pair into the map
 TEST(PutTest, TestPut) {
-  Kvmap map;
+  kvstore::Kvmap map;
   EXPECT_FALSE(map.Get("banana").has_value());
   map.Put("banana", "yellow");
   EXPECT_EQ("yellow", map.Get("banana").value()[0]);

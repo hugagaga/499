@@ -16,12 +16,6 @@ using grpc::Status;
 using kvstore::KeyValueStore;
 using kvstore::PutReply;
 using kvstore::PutRequest;
-using warble::Key;
-using warble::RegisteruserReply;
-using warble::RegisteruserRequest;
-using warble::Timestamp;
-using warble::WarbleReply;
-using warble::WarbleRequest;
 
 namespace warble {
 void Functions::Init() { currentWarbleid_ = 0; }

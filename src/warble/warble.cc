@@ -30,7 +30,6 @@ DEFINE_string(read, "", "Warble thread id");
 DEFINE_bool(profile, false, "Boolean input or empty as ture");
 
 int main(int argc, char** argv) {
-  FLAGS_log_dir = "/499/log";
   google::InitGoogleLogging(argv[0]);
   google::ParseCommandLineFlags(&argc, &argv, true);
   FuncClient warble(grpc::CreateChannel("localhost:50000",

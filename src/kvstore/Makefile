@@ -31,7 +31,7 @@ PROTOS_PATH = ../../protos
 
 vpath %.proto $(PROTOS_PATH)
 
-all: kvstore_server 
+all: kvstore_server kvmap_test
 
 kvstore_server: kvmap.o kvstore.pb.o kvstore.grpc.pb.o kvstore_server.o 
 	$(CXX) $^ $(LDFLAGS) -o $@
