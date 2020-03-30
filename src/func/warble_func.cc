@@ -1,7 +1,9 @@
 #include "warble_func.h"
 
+#include <algorithm>
 #include <chrono>
 #include <optional>
+#include <random>
 #include <stack>
 #include <string>
 #include <vector>
@@ -18,9 +20,24 @@ using kvstore::PutReply;
 using kvstore::PutRequest;
 
 namespace warble {
-void Functions::Init() { currentWarbleid_ = 0; }
 
-bool Functions::hasUser(std::string username) {
+std::string random_id(size_t length) {
+  std::vector<char> ch_set({'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
+                            'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U',
+                            'V', 'W', 'X', 'Y', 'Z',
+                            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
+                            'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u',
+                            'v', 'w', 'x', 'y', 'z'});
+  std::string str(length, 0);
+  std::default_random_engine rng(std::random_device{}());
+  std::uniform_int_distribution<> dist(0, ch_set.size() - 1);
+  auto rand_ch = [ch_set, &dist, &rng]() { return ch_set[dist(rng)]; };
+  std::generate_n(str.begin(), length, rand_ch);
+  return str;
+}
+
+bool hasUser(std::string username) {
   KeyValueStoreClient func(grpc::CreateChannel(
       "localhost:50001", grpc::InsecureChannelCredentials()));
   Key keyMessage;
@@ -33,7 +50,7 @@ bool Functions::hasUser(std::string username) {
   return hasKey.ok();
 }
 
-std::optional<Any> Functions::RegisterUser(Any input) {
+std::optional<Any> RegisterUser(Any input) {
   std::optional<Any> ret = std::nullopt;
   // Parse input from Any to request
   RegisteruserRequest request;
@@ -59,7 +76,7 @@ std::optional<Any> Functions::RegisterUser(Any input) {
   return ret;
 }
 
-std::optional<Any> Functions::Warble(Any input) {
+std::optional<Any> Warble(Any input) {
   std::optional<Any> ret = std::nullopt;
   // Parse input from Any to request
   Key keyMessage;
@@ -73,12 +90,14 @@ std::optional<Any> Functions::Warble(Any input) {
     bool isReply = !request.parent_id().empty();
     KeyValueStoreClient func(grpc::CreateChannel(
         "localhost:50001", grpc::InsecureChannelCredentials()));
+    // Generate a random warble id.
+    std::string id = random_id(16);
     // Create a new thread for current warble
     keyMessage.set_type("warble");
-    keyMessage.set_id(std::to_string(currentWarbleid_));
-    valueMessage.set_parent_id(std::to_string(currentWarbleid_));
+    keyMessage.set_id(std::to_string(id));
+    valueMessage.set_parent_id(std::to_string(id));
     valueMessage.set_username(username);
-    valueMessage.set_id(std::to_string(currentWarbleid_));
+    valueMessage.set_id(std::to_string(id));
     valueMessage.set_text(text);
     auto now = std::chrono::system_clock::now().time_since_epoch();
     Timestamp* time = new Timestamp();
@@ -110,12 +129,11 @@ std::optional<Any> Functions::Warble(Any input) {
     Any output;
     output.PackFrom(reply);
     ret = std::optional<Any>{output};
-    currentWarbleid_++;
   }
   return ret;
 }
 
-std::optional<Any> Functions::Follow(Any input) {
+std::optional<Any> Follow(Any input) {
   std::optional<Any> ret = std::nullopt;
   // Parse input from Any to request message
   FollowRequest request;
@@ -149,7 +167,7 @@ std::optional<Any> Functions::Follow(Any input) {
   return ret;
 }
 
-std::optional<Any> Functions::Read(Any input) {
+std::optional<Any> Read(Any input) {
   std::optional<Any> ret = std::nullopt;
   // Parse input from Any to request message
   ReadRequest request;
@@ -209,7 +227,7 @@ std::optional<Any> Functions::Read(Any input) {
   return ret;
 }
 
-std::optional<Any> Functions::Profile(Any input) {
+std::optional<Any> Profile(Any input) {
   std::optional<Any> ret = std::nullopt;
   // Parse input from Any to request message
   ProfileRequest request;
@@ -234,7 +252,7 @@ std::optional<Any> Functions::Profile(Any input) {
         reply.add_followers(followers[i]);
       }
     }
-    
+
     keyMessage.set_type("following");
     keyMessage.SerializeToString(&key);
     std::vector<std::string> following;
@@ -247,7 +265,7 @@ std::optional<Any> Functions::Profile(Any input) {
     }
     Any output;
     output.PackFrom(reply);
-    ret = std::optional<Any> {output};
+    ret = std::optional<Any>{output};
   }
   return ret;
 }

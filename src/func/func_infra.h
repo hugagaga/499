@@ -37,8 +37,6 @@ class FuncInfra {
   std::unordered_set<EventType> registeredList_;
   // A map to map all event types to functions
   std::unordered_map<EventType, std::function<std::optional<Any> (Any)>> map_;
-  // A client who can Hook and Unhook functions in func layer and has functions implemented.
-  warble::Functions client_;
   // Make registeredList_ thread safe
   std::mutex mutex_;
 };
