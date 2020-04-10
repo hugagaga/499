@@ -14,10 +14,8 @@ using google::protobuf::Any;
 using google::protobuf::Message;
 
 namespace warble {
-class Functions {
- public:
-  // Initialization
-  void Init();
+  // Generate random id
+  std::string random_id(size_t length);
   // protobuf message warble::Key {username, type, id}
   // Inserts a Serialized (warble::Key, username) pair to the kvstore backend
   std::optional<Any> RegisterUser(Any);
@@ -33,11 +31,6 @@ class Functions {
   std::optional<Any> Profile(Any);
   // Check if a user exists
   bool hasUser(std::string username);
- private:
-  // warble id counter
-  int currentWarbleid_;
-};
-
 }  // namespace warble
 
 #endif  // WARBLE_FUNCTIONS_H_

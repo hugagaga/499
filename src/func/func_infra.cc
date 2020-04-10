@@ -19,7 +19,6 @@ using warble::RegisteruserReply;
 namespace func {
 
 void FuncInfra::Init() {
-  client_.Init();
   std::function registeruser = [&](Any input) -> std::optional<Any> { return client_.RegisterUser(input);};
   map_.insert(std::make_pair(EventType::REGISTER_USER, registeruser));
   std::function warble = [&](Any input) -> std::optional<Any> { return client_.Warble(input);};
