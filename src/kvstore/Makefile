@@ -7,11 +7,13 @@ ifeq ($(SYSTEM),Darwin)
 LDFLAGS += -L/usr/local/lib `pkg-config --libs protobuf grpc++`\
 					 -pthread\
 					 -lglog\
+					 -lgflags\
            -lgrpc++_reflection\
            -ldl
 else
 LDFLAGS += -L/usr/local/lib `pkg-config --libs protobuf grpc++`\
            -lglog\
+		   -lgflags\
 					 -pthread\
            -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed\
            -ldl
@@ -31,9 +33,9 @@ PROTOS_PATH = ../../protos
 
 vpath %.proto $(PROTOS_PATH)
 
-all: kvstore_server kvmap_test
+all: kvstore_server 
 
-kvstore_server: kvmap.o kvstore.pb.o kvstore.grpc.pb.o kvstore_server.o 
+kvstore_server: kvstore.pb.o kvstore.grpc.pb.o kvstore_server.o kvmap.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 kvmap_test: kvmap.o kvmap_test.o 

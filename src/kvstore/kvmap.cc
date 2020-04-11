@@ -1,13 +1,16 @@
 #include "kvmap.h"
 
+#include <fstream>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <mutex>
+
+#include "kvstore.grpc.pb.h"
 
 namespace kvstore {
-  
+
 Kvmap::Kvmap() = default;
 
 void Kvmap::KvmapSetup(
@@ -41,6 +44,37 @@ int Kvmap::Remove(const std::string& key) {
   const std::lock_guard<std::mutex> lock(mutex_);
   int num = kvmap_.erase(key);
   return num;
+}
+
+void Kvmap::Update(std::string filename) {
+  Kvpairs res;
+  std::ofstream ofs;
+  ofs.open(filename, std::ios_base::trunc);
+  if (ofs.is_open()) {
+    for (auto const& x : kvmap_) {
+      PutRequest* p = res.add_pair();
+      p->set_key(x.first);
+      p->set_value(x.second);
+    }
+    std::string output;
+    res.SerializeToString(&output);
+    ofs << output;
+    ofs.close();
+  }
+}
+
+void Kvmap::Restore(std::string filename) {
+  std::ifstream ifs;
+  ifs.open(filename, std::ios_base::in);
+  if (ifs.is_open()) {
+    std::string content( (std::istreambuf_iterator<char>(ifs) ),
+                       (std::istreambuf_iterator<char>()    ) );
+    Kvpairs res;
+    res.ParseFromString(content);
+    for (int i = 0; i < res.pair_size(); ++i) {
+      Put(res.pair(i).key(), res.pair(i).value());
+    }
+  }
 }
 
 }  // namespace kvstore

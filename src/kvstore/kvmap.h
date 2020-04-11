@@ -24,7 +24,11 @@ class Kvmap {
   std::optional<std::vector<std::string>> Get(const std::string& key);
   // deletes all previously stored values under that key
   int Remove(const std::string& key);
-
+  // update records of the file of given filename
+  void Update(std::string filename);
+  // restore data from the previous stored file
+  void Restore(std::string filename);
+  
  private:
   // A multimap as a database 
   std::unordered_multimap<std::string, std::string> kvmap_;

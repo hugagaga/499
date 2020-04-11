@@ -20,7 +20,7 @@ namespace warble {
   // Inserts a Serialized (warble::Key, username) pair to the kvstore backend
   std::optional<Any> RegisterUser(Any);
   // Post a new warble(or reply), returns the new warble in warble::Warble
-  std::optional<Any> Warble(Any);
+  std::optional<Any> WarbleFunc(Any);
   // Starts following a given user, 
   // insert ({target_username, type = "followers"}, username)
   // and ({username, type = "following"}, target_username)

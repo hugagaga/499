@@ -27,6 +27,10 @@ message RemoveReply {
   // Empty because success/failure is signaled via GRPC status.
 }
 
+message Kvpairs {
+  repeated PutRequest pair = 1;
+}
+
 service KeyValueStore {
   rpc Put (PutRequest) returns (PutReply) {}
   rpc Remove (RemoveRequest) returns (RemoveReply) {}

@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <string>
+#include <mutex>
 
 #include <grpcpp/grpcpp.h>
 
@@ -34,13 +35,17 @@ class KeyValueStoreImpl final : public KeyValueStore::Service {
   // Call Kvmap::Remove(key) function
   Status Remove(ServerContext* context, const RemoveRequest* request,
                 RemoveReply* response) override;
-
+  // Restore data from previously-stored file
+  void Restore(std::string filename);
  private:
   // Kvmap objects that contains kvstore functions
   kvstore::Kvmap kvstore_;
+  // Mutex lock to keep Put function thread-safe
+  std::mutex mutex_;
 };
 
-// Run the server
-void RunServer();
+// Run the server, 
+// If store is true, put results into the file of with given filename
+void RunServer(bool store, std::string filename);
 
 #endif  // WARBLE_KVSTORE_SERVER_H_
