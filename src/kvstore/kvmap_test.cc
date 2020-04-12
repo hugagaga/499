@@ -4,7 +4,6 @@
 
 #include <gtest/gtest.h>
 
-
 // Test class Kvmap functions
 namespace {
 
@@ -52,6 +51,25 @@ TEST(PutTest, TestPut) {
 TEST_F(KvmapTest, TestRemove) {
   EXPECT_TRUE(map.Get("apple"));
   EXPECT_EQ(2, map.Remove("apple"));
+  EXPECT_EQ(std::nullopt, map.Get("apple"));
+}
+
+//Since the data is serialized by protobuf, we can not test
+//Update(filename) and Restore(filename) seperately by comparing file contents.
+
+//Restore from a Existing File
+TEST(UpdateRestoreTest, RestoreExistingFile) {
+  kvstore::Kvmap map1;
+  map1.Put("apple", "red");
+  map1.Update("testfile");
+  kvstore::Kvmap map2;
+  map2.Restore("testfile");
+  EXPECT_EQ("red", map2.Get("apple").value()[0]);
+}
+
+TEST(UpdateRestoreTest, RestoreNonExistingFile) {
+  kvstore::Kvmap map;
+  map.Restore("testfile2");
   EXPECT_EQ(std::nullopt, map.Get("apple"));
 }
 

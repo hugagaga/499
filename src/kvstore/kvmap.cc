@@ -46,7 +46,7 @@ int Kvmap::Remove(const std::string& key) {
   return num;
 }
 
-void Kvmap::Update(std::string filename) {
+void Kvmap::Update(const std::string& filename) {
   Kvpairs res;
   std::ofstream ofs;
   ofs.open(filename, std::ios_base::trunc);
@@ -63,7 +63,7 @@ void Kvmap::Update(std::string filename) {
   }
 }
 
-void Kvmap::Restore(std::string filename) {
+void Kvmap::Restore(const std::string& filename) {
   std::ifstream ifs;
   ifs.open(filename, std::ios_base::in);
   if (ifs.is_open()) {

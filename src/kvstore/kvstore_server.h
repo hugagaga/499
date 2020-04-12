@@ -2,13 +2,15 @@
 #define WARBLE_KVSTORE_SERVER_H_
 
 #include <memory>
-#include <string>
 #include <mutex>
+#include <string>
+
 
 #include <grpcpp/grpcpp.h>
 
-#include "kvstore.grpc.pb.h"
 #include "kvmap.h"
+#include "kvstore.grpc.pb.h"
+
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -45,7 +47,7 @@ class KeyValueStoreImpl final : public KeyValueStore::Service {
 };
 
 // Run the server, 
-// If store is true, put results into the file of with given filename
-void RunServer(bool store, std::string filename);
+// If FLAGS_store is not empty, put results into the file of with given filename, FLAGS_store.
+void RunServer();
 
 #endif  // WARBLE_KVSTORE_SERVER_H_

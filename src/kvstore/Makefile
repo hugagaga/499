@@ -25,7 +25,7 @@ GRPC_CPP_PLUGIN_PATH ?= `which $(GRPC_CPP_PLUGIN)`
 GOOGLE_TEST_LIB = gtest
 GOOGLE_TEST_INCLUDE = /usr/local/include
 G++_FLAGS = -c -Wall -I $(GOOGLE_TEST_INCLUDE)
-TEST_LD_FLAGS = -L /usr/local/lib -l $(GOOGLE_TEST_LIB) -l pthread
+TEST_LD_FLAGS = -L /usr/local/lib `pkg-config --libs protobuf grpc++` -l $(GOOGLE_TEST_LIB) -l pthread
 
 
 
@@ -33,13 +33,13 @@ PROTOS_PATH = ../../protos
 
 vpath %.proto $(PROTOS_PATH)
 
-all: kvstore_server 
+all: kvstore_server kvmap_test
 
-kvstore_server: kvstore.pb.o kvstore.grpc.pb.o kvstore_server.o kvmap.o
+kvstore_server: kvstore.pb.o kvstore.grpc.pb.o kvmap.o kvstore_server.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-kvmap_test: kvmap.o kvmap_test.o 
-	$(CXX) -o $@ $^ $(TEST_LD_FLAGS)
+kvmap_test: kvstore.pb.o kvstore.grpc.pb.o kvmap.o kvmap_test.o 
+	$(CXX) $^ $(TEST_LD_FLAGS) -o $@
 
 .PRECIOUS: %.grpc.pb.cc
 %.grpc.pb.cc: %.proto
