@@ -76,7 +76,7 @@ std::optional<Any> RegisterUser(Any input) {
   return ret;
 }
 
-std::optional<Any> Warble(Any input) {
+std::optional<Any> WarbleFunc(Any input) {
   std::optional<Any> ret = std::nullopt;
   // Parse input from Any to request
   Key keyMessage;
@@ -94,10 +94,10 @@ std::optional<Any> Warble(Any input) {
     std::string id = random_id(16);
     // Create a new thread for current warble
     keyMessage.set_type("warble");
-    keyMessage.set_id(std::to_string(id));
-    valueMessage.set_parent_id(std::to_string(id));
+    keyMessage.set_id(id);
+    valueMessage.set_parent_id(id);
     valueMessage.set_username(username);
-    valueMessage.set_id(std::to_string(id));
+    valueMessage.set_id(id);
     valueMessage.set_text(text);
     auto now = std::chrono::system_clock::now().time_since_epoch();
     Timestamp* time = new Timestamp();

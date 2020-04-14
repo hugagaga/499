@@ -54,6 +54,28 @@ TEST_F(KvmapTest, TestRemove) {
   EXPECT_EQ(std::nullopt, map.Get("apple"));
 }
 
+//Since the data is serialized by protobuf, we can not test
+//Update(filename) and Restore(filename) seperately by comparing file contents.
+
+//Test if Update serializes kvmap to a file and Restore can restore the previous kvmap from
+//the serialized string in a existing File
+TEST(UpdateRestoreTest, RestoreExistingFile) {
+  kvstore::Kvmap map1;
+  map1.Put("apple", "red");
+  map1.Update("testfile");
+  kvstore::Kvmap map2;
+  map2.Restore("testfile");
+  EXPECT_EQ("red", map2.Get("apple").value()[0]);
+}
+
+//Test Restore corner case where the Restore function has a non-existing file to restore.
+//The restored kvmap should be empty
+TEST(UpdateRestoreTest, RestoreNonExistingFile) {
+  kvstore::Kvmap map;
+  map.Restore("testfile2");
+  EXPECT_EQ(std::nullopt, map.Get("apple"));
+}
+
 }  // namespace
 
 int main(int argc, char *argv[]) {

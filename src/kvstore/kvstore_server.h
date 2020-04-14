@@ -2,12 +2,15 @@
 #define WARBLE_KVSTORE_SERVER_H_
 
 #include <memory>
+#include <mutex>
 #include <string>
+
 
 #include <grpcpp/grpcpp.h>
 
-#include "kvstore.grpc.pb.h"
 #include "kvmap.h"
+#include "kvstore.grpc.pb.h"
+
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -34,13 +37,17 @@ class KeyValueStoreImpl final : public KeyValueStore::Service {
   // Call Kvmap::Remove(key) function
   Status Remove(ServerContext* context, const RemoveRequest* request,
                 RemoveReply* response) override;
-
+  // Restore data from previously-stored file
+  void Restore(std::string filename);
  private:
   // Kvmap objects that contains kvstore functions
   kvstore::Kvmap kvstore_;
+  // Mutex lock to keep Put function thread-safe
+  std::mutex mutex_;
 };
 
-// Run the server
+// Run the server, 
+// If FLAGS_store is not empty, put results into the file of with given filename, FLAGS_store.
 void RunServer();
 
 #endif  // WARBLE_KVSTORE_SERVER_H_
