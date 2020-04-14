@@ -14,7 +14,7 @@ class Kvmap {
   // Default Constructor
   Kvmap();
   // Construct the kvmap_ from a vector of pairs<string, string> (for testing)
-  void KvmapSetup(const std::vector<std::pair<std::string, std::string>>&);
+  void KvmapSetup(const std::vector<std::pair<std::string, std::string>>& list);
   // Inserts <string, string> pair into the map
   void Put(const std::string& key, const std::string& value);
   // Returns an optional contained value which is

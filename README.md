@@ -75,7 +75,7 @@ A Twitter-like command line C++ application built on the Faas Platform that comm
 ### Build code  
     cd /src
     make
-### Run code
+### Run/Test code
 1. Start back-end Key-Value Store Server   
 ```
 ./kvstore/kvstore_server
@@ -111,7 +111,3 @@ Follow a user by username
 Read a thread of warbles start with a warble of (warble id)
 * --profile --user (username)  
 Shows a user's following and followers by username
-### Test code
-* Run basic test cases of back-end kvstore
-```
-./kvstore/kvmap_test

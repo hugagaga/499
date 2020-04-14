@@ -92,43 +92,82 @@ std::optional<Any> WarbleFunc(Any input) {
         "localhost:50001", grpc::InsecureChannelCredentials()));
     // Generate a random warble id.
     std::string id = random_id(16);
-    // Create a new thread for current warble
-    keyMessage.set_type("warble");
-    keyMessage.set_id(id);
-    valueMessage.set_parent_id(id);
-    valueMessage.set_username(username);
-    valueMessage.set_id(id);
-    valueMessage.set_text(text);
-    auto now = std::chrono::system_clock::now().time_since_epoch();
-    Timestamp* time = new Timestamp();
-    time->set_seconds(
-        std::chrono::duration_cast<std::chrono::seconds>(now).count());
-    time->set_useconds(
-        std::chrono::duration_cast<std::chrono::milliseconds>(now).count());
-    valueMessage.set_allocated_timestamp(time);
-    std::string currentID;
-    std::string warble;
-    keyMessage.SerializeToString(&currentID);
-    valueMessage.SerializeToString(&warble);
-
-    func.Put(currentID, warble);
 
     // If the warble is a reply, add it to the parent thread.
     if (isReply) {
+      Key keyMessage;
       keyMessage.set_id(request.parent_id());
-      valueMessage.set_parent_id(request.parent_id());
-      std::string parentID;
-      keyMessage.SerializeToString(&parentID);
+      keyMessage.set_type("warble");
+      std::string key;
+      keyMessage.SerializeToString(&key);
+      std::vector<std::string> warbles;
+      bool hasThread = func.GetOne(key, warbles).ok();
+      if (hasThread) {
+        // Create a new thread for current warble
+        keyMessage.set_type("warble");
+        keyMessage.set_id(id);
+        valueMessage.set_parent_id(id);
+        valueMessage.set_username(username);
+        valueMessage.set_id(id);
+        valueMessage.set_text(text);
+        auto now = std::chrono::system_clock::now().time_since_epoch();
+        Timestamp* time = new Timestamp();
+        time->set_seconds(
+            std::chrono::duration_cast<std::chrono::seconds>(now).count());
+        time->set_useconds(
+            std::chrono::duration_cast<std::chrono::milliseconds>(now).count());
+        valueMessage.set_allocated_timestamp(time);
+        std::string currentID;
+        std::string warble;
+        keyMessage.SerializeToString(&currentID);
+        valueMessage.SerializeToString(&warble);
+
+        func.Put(currentID, warble);
+
+        keyMessage.set_id(request.parent_id());
+        valueMessage.set_parent_id(request.parent_id());
+        std::string parentID;
+        keyMessage.SerializeToString(&parentID);
+        valueMessage.SerializeToString(&warble);
+
+        func.Put(parentID, warble);
+
+        warble::Warble* returned_warble = new warble::Warble(valueMessage);
+        WarbleReply reply;
+        reply.set_allocated_warble(returned_warble);
+        Any output;
+        output.PackFrom(reply);
+        ret = std::optional<Any>{output};
+      }
+    } else {
+      // Create a new thread for current warble
+      keyMessage.set_type("warble");
+      keyMessage.set_id(id);
+      valueMessage.set_parent_id(id);
+      valueMessage.set_username(username);
+      valueMessage.set_id(id);
+      valueMessage.set_text(text);
+      auto now = std::chrono::system_clock::now().time_since_epoch();
+      Timestamp* time = new Timestamp();
+      time->set_seconds(
+          std::chrono::duration_cast<std::chrono::seconds>(now).count());
+      time->set_useconds(
+          std::chrono::duration_cast<std::chrono::milliseconds>(now).count());
+      valueMessage.set_allocated_timestamp(time);
+      std::string currentID;
+      std::string warble;
+      keyMessage.SerializeToString(&currentID);
       valueMessage.SerializeToString(&warble);
 
-      func.Put(parentID, warble);
+      func.Put(currentID, warble);
+
+      warble::Warble* returned_warble = new warble::Warble(valueMessage);
+      WarbleReply reply;
+      reply.set_allocated_warble(returned_warble);
+      Any output;
+      output.PackFrom(reply);
+      ret = std::optional<Any>{output};
     }
-    warble::Warble* returned_warble = new warble::Warble(valueMessage);
-    WarbleReply reply;
-    reply.set_allocated_warble(returned_warble);
-    Any output;
-    output.PackFrom(reply);
-    ret = std::optional<Any>{output};
   }
   return ret;
 }

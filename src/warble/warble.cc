@@ -1,8 +1,9 @@
+#include <gflags/gflags.h>
+#include <glog/logging.h>
+
 #include <map>
 #include <stack>
 
-#include <gflags/gflags.h>
-#include <glog/logging.h>
 #include "../func/func_client.h"
 #include "../func/func_infra.h"
 #include "../func/warble.grpc.pb.h"
@@ -56,6 +57,8 @@ int main(int argc, char** argv) {
         std::cout << "Func server error!" << std::endl;
       }
       warble.Unhook(func::EventType::REGISTER_USER);
+    } else {
+      std::cout << "Username missing! Please add a valid username with \"--user\"flag." << std::endl;
     }
   } else {
     // Warble(reply) event
@@ -98,7 +101,7 @@ int main(int argc, char** argv) {
         std::cout << "---------------------------------------------------"
                   << std::endl;
       } else {
-        std::cout << "service not available!" << std::endl;
+        std::cout << "Invalid argument!" << std::endl;
       }
       warble.Unhook(func::EventType::WARBLE);
     }
