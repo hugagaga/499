@@ -50,6 +50,44 @@ bool hasUser(std::string username) {
   return hasKey.ok();
 }
 
+// Helper function: To extract hashtags from the warble test
+std::vector<std::string> extractHashTags(const std::string s) {
+  if (s.empty()) {
+    return {};
+  }
+
+  std::vector<std::string> res;
+  int start = 0, end = 0;
+
+  // start should not be the last char.
+  while (start < s.size() - 1) {
+    // find #
+    while (start < s.size() - 1 && s[start] != '#') {
+      start++;
+    }
+
+    if (start < s.size() - 1) {
+      end = start + 1;
+
+      // case like ######
+      if (s[end] == '#') {
+        start = end + 1;
+        continue;
+      }
+
+      // find space or end
+      while (end < s.size() && !isspace(s[end])) {
+        end++;
+      }
+      std::string tag = s.substr(start + 1, end - 1 - start);
+      res.push_back(tag);
+      start = end + 1;
+    }
+  }
+
+  return res;
+}
+
 std::optional<Any> RegisterUser(Any input) {
   std::optional<Any> ret = std::nullopt;
   // Parse input from Any to request
@@ -87,6 +125,10 @@ std::optional<Any> WarbleFunc(Any input) {
 
   if (hasUser(username)) {
     std::string text = request.text();
+
+    // Extract hashtags
+    std::vector<std::string> hashtagList = extractHashTags(text);
+
     bool isReply = !request.parent_id().empty();
     KeyValueStoreClient func(grpc::CreateChannel(
         "localhost:50001", grpc::InsecureChannelCredentials()));
@@ -132,6 +174,18 @@ std::optional<Any> WarbleFunc(Any input) {
 
         func.Put(parentID, warble);
 
+        // Store the hashtag entry into the kvstore
+        for (const std::string &hashtag : hashtagList) {
+          Key hashtagKeyMessage;
+          hashtagKeyMessage.set_type("hashtag");
+          hashtagKeyMessage.set_id(hashtag);
+
+          std::string hashtagKey;
+          hashtagKeyMessage.SerializeToString(&hashtagKey);
+
+          func.Put(hashtagKey, warble);
+        }
+
         warble::Warble* returned_warble = new warble::Warble(valueMessage);
         WarbleReply reply;
         reply.set_allocated_warble(returned_warble);
@@ -160,6 +214,18 @@ std::optional<Any> WarbleFunc(Any input) {
       valueMessage.SerializeToString(&warble);
 
       func.Put(currentID, warble);
+
+      // Store the hashtag entry into the kvstore
+      for (const std::string &hashtag : hashtagList) {
+        Key hashtagKeyMessage;
+        hashtagKeyMessage.set_type("hashtag");
+        hashtagKeyMessage.set_id(hashtag);
+
+        std::string hashtagKey;
+        hashtagKeyMessage.SerializeToString(&hashtagKey);
+
+        func.Put(hashtagKey, warble);
+      }
 
       warble::Warble* returned_warble = new warble::Warble(valueMessage);
       WarbleReply reply;
