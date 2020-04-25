@@ -88,6 +88,24 @@ std::vector<std::string> extractHashTags(const std::string s) {
   return res;
 }
 
+// Helper function: To extract all the warbles which posted after the specified
+// timestamp
+std::vector<Warble> extractWarbles(const std::vector<Warble> &warbles,
+                                   const Timestamp &timestamp) {
+  auto iter = warbles.begin();
+  for (; iter != warbles.end(); iter++) {
+    if (iter->timestamp().seconds() > timestamp.seconds()) {
+      break;
+    } else if (iter->timestamp().seconds() == timestamp.seconds()) {
+      if (iter->timestamp().useconds() > timestamp.useconds()) {
+        break;
+      }
+    }
+  }
+
+  return std::vector<Warble>(iter, warbles.end());
+}
+
 std::optional<Any> RegisterUser(Any input) {
   std::optional<Any> ret = std::nullopt;
   // Parse input from Any to request
@@ -375,4 +393,48 @@ std::optional<Any> Profile(Any input) {
   return ret;
 }
 
-}  // namespace warble
+std::optional<Any> WarbleStream(Any input) {
+  std::optional<Any> ret = std::nullopt;
+  // Parse input from Any to request message
+  StreamRequest request;
+  input.UnpackTo(&request);
+
+  std::string hashtag = request.hashtag();
+  Timestamp timestamp = request.timestamp();
+
+  Key keyMessage;
+  std::string key;
+  StreamReply reply;
+
+  KeyValueStoreClient func(grpc::CreateChannel(
+      "localhost:50001", grpc::InsecureChannelCredentials()));
+  keyMessage.set_type("hashtag");
+  keyMessage.set_id(hashtag);
+  keyMessage.SerializeToString(&key);
+
+  std::vector<std::string> warblesAsStrings;
+  bool hasWarbles = func.GetOne(key, warblesAsStrings).ok();
+
+  // Deserialize warblesAsStrings to list of warbles.
+  std::vector<Warble> warbles;
+  if (hasWarbles) {
+    for (const std::string &warbleAsString : warblesAsStrings) {
+      Warble warble;
+      warble.ParseFromString(warbleAsString);
+      warbles.push_back(warble);
+    }
+  }
+
+  std::vector<Warble> retWarbles = extractWarbles(warbles, timestamp);
+
+  for (const Warble &warble : retWarbles) {
+    auto warble_to_add = reply.add_warbles();
+    warble_to_add->CopyFrom(warble);
+  }
+
+  Any output;
+  output.PackFrom(reply);
+  ret = std::optional<Any>{output};
+  return ret;
+}
+} // namespace warble
