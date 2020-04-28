@@ -16,7 +16,7 @@ using google::protobuf::Any;
 namespace func {
 
 // All event types the func layer deal with
-enum class EventType { REGISTER_USER, WARBLE, FOLLOW, READ, PROFILE };
+enum class EventType { REGISTER_USER, WARBLE, FOLLOW, READ, PROFILE, STREAM };
 
 // Func Faas infrastructure
 class FuncInfra {
