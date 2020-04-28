@@ -90,8 +90,13 @@ std::vector<std::string> extractHashTags(const std::string s) {
 
 // Helper function: To extract all the warbles which posted after the specified
 // timestamp
-std::vector<Warble> extractWarbles(const std::vector<Warble> &warbles,
+std::vector<Warble> extractWarbles(std::vector<Warble> &warbles,
                                    const Timestamp &timestamp) {
+
+  sort(warbles.begin(), warbles.end(), [](Warble comp1, Warble comp2) {
+    return comp1.timestamp().useconds() < comp2.timestamp().useconds();
+  });
+
   auto iter = warbles.begin();
   for (; iter != warbles.end(); iter++) {
     if (iter->timestamp().seconds() > timestamp.seconds()) {
