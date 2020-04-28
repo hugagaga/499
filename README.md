@@ -111,6 +111,8 @@ Follow a user by username
 Read a thread of warbles start with a warble of (warble id)
 * --profile --user (username)  
 Shows a user's following and followers by username
+* --stream (#hashtag) --user (username)  
+Shows all warbles posted that contain #hashtag after stream() call.
 ### Test code
 * Run basic test cases of back-end kvstore
 ```
