@@ -19,16 +19,30 @@ using warble::RegisteruserReply;
 namespace func {
 
 void FuncInfra::Init() {
-  std::function registeruser = [&](Any input) -> std::optional<Any> { return warble::RegisterUser(input);};
+  std::function registeruser = [&](Any input) -> std::optional<Any> {
+    return warble::RegisterUser(input);
+  };
   map_.insert(std::make_pair(EventType::REGISTER_USER, registeruser));
-  std::function warble = [&](Any input) -> std::optional<Any> { return warble::WarbleFunc(input);};
+  std::function warble = [&](Any input) -> std::optional<Any> {
+    return warble::WarbleFunc(input);
+  };
   map_.insert(std::make_pair(EventType::WARBLE, warble));
-  std::function follow = [&](Any input) -> std::optional<Any> { return warble::Follow(input);};
+  std::function follow = [&](Any input) -> std::optional<Any> {
+    return warble::Follow(input);
+  };
   map_.insert(std::make_pair(EventType::FOLLOW, follow));
-  std::function read = [&](Any input) -> std::optional<Any> { return warble::Read(input);};
+  std::function read = [&](Any input) -> std::optional<Any> {
+    return warble::Read(input);
+  };
   map_.insert(std::make_pair(EventType::READ, read));
-  std::function profile = [&](Any input) -> std::optional<Any> { return warble::Profile(input);};
+  std::function profile = [&](Any input) -> std::optional<Any> {
+    return warble::Profile(input);
+  };
   map_.insert(std::make_pair(EventType::PROFILE, profile));
+  std::function stream = [&](Any input) -> std::optional<Any> {
+    return warble::WarbleStream(input);
+  };
+  map_.insert(std::make_pair(EventType::STREAM, stream));
 }
 
 void FuncInfra::Hook(const EventType& e) { 

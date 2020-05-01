@@ -1,3 +1,6 @@
+#include <unistd.h>
+#include <sys/time.h>
+
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
@@ -21,6 +24,8 @@ using warble::RegisteruserRequest;
 using warble::Timestamp;
 using warble::WarbleReply;
 using warble::WarbleRequest;
+using warble::StreamReply;
+using warble::StreamRequest;
 
 DEFINE_string(registeruser, "", "Username to register");
 DEFINE_string(warble, "", "Text of a warble");
@@ -29,6 +34,7 @@ DEFINE_string(reply, "", "Reply warble id");
 DEFINE_string(follow, "", "Follow the given username");
 DEFINE_string(read, "", "Warble thread id");
 DEFINE_bool(profile, false, "Boolean input or empty as ture");
+DEFINE_string(stream, "", "Requested hashtag for the stream of warbles");
 
 int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
@@ -238,6 +244,62 @@ int main(int argc, char** argv) {
         std::cout << "User does not exist" << std::endl;
       }
       warble.Unhook(func::EventType::PROFILE);
+    }
+
+    // Stream Event
+    if (!FLAGS_stream.empty()) {
+      warble.Hook(func::EventType::STREAM);
+
+      std::cout << "Start stream warbles with hashtag " << FLAGS_stream
+                << std::endl;
+
+      // Construct the intial request.
+      // The requested time is now.
+      StreamRequest request;
+      request.set_hashtag(FLAGS_stream);
+      auto now = std::chrono::system_clock::now().time_since_epoch();
+      Timestamp *time = new Timestamp();
+      time->set_seconds(
+          std::chrono::duration_cast<std::chrono::seconds>(now).count());
+      auto tmp =
+          std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
+      time->set_useconds(tmp);
+      request.set_allocated_timestamp(time);
+
+      while (true) {
+        Any *input = new Any();
+        input->PackFrom(request);
+        Any *output = new Any();
+        Status status = warble.Event(func::EventType::STREAM, input, output);
+
+        StreamReply reply;
+        output->UnpackTo(&reply);
+
+        if (status.ok()) {
+          for (const warble::Warble &w : reply.warbles()) {
+            std::cout << "---------------------------------------------------"
+                      << std::endl;
+            std::cout << "Username: " << w.username() << std::endl;
+            std::cout << "warble ID: " << w.id() << std::endl;
+            std::cout << "parent warble ID: " << w.parent_id() << std::endl;
+            int time = w.timestamp().seconds();
+            std::time_t t = static_cast<std::time_t>(time);
+            std::cout << "Time: " << std::asctime(std::localtime(&t));
+            std::cout << "Content: " << w.text() << std::endl;
+            std::cout << "---------------------------------------------------"
+                      << std::endl;
+          }
+          // Update the requested time as the time of previous warble
+          if (reply.warbles_size() > 0) {
+            Timestamp newTimestamp =
+                reply.warbles((reply.warbles_size() - 1)).timestamp();
+            request.mutable_timestamp()->CopyFrom(newTimestamp);
+          }
+        }
+
+        // sleep for 100ms
+        usleep(100);
+      }
     }
   }
 }
