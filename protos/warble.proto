@@ -66,3 +66,12 @@ message Key {
   string type = 2;  // The type of value to be stored in the kvmap
   bytes id = 3;  // Warble id if type is a Warble
 }
+
+message StreamRequest {
+  string hashtag = 1; // The requested hashtag.
+  Timestamp timestamp = 2;  // The time the client requests for stream updates.
+}
+
+message StreamReply {
+  repeated Warble warbles = 1; // The requested warble stream.
+}

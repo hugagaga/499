@@ -29,6 +29,8 @@ namespace warble {
   std::optional<Any> Read(Any input);
   // Returns this user's following and followers
   std::optional<Any> Profile(Any input);
+  // Returns the warbles which contain the specified hashtag.
+  std::optional<Any> WarbleStream(Any input);
   // Check if a user exists
   bool hasUser(std::string username);
 }  // namespace warble
