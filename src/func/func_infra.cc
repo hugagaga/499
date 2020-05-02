@@ -19,30 +19,26 @@ using warble::RegisteruserReply;
 namespace func {
 
 void FuncInfra::Init() {
-  std::function registeruser = [&](Any input) -> std::optional<Any> {
-    return warble::RegisterUser(input);
+  map_ = {
+      {EventType::REGISTER_USER,
+       std::function<std::optional<Any>(Any, StorageAbstraction &)>(
+           warble::RegisterUser)},
+      {EventType::WARBLE,
+       std::function<std::optional<Any>(Any, StorageAbstraction &)>(
+           warble::WarbleFunc)},
+      {EventType::FOLLOW,
+       std::function<std::optional<Any>(Any, StorageAbstraction &)>(
+           warble::Follow)},
+      {EventType::READ,
+       std::function<std::optional<Any>(Any, StorageAbstraction &)>(
+           warble::Read)},
+      {EventType::PROFILE,
+       std::function<std::optional<Any>(Any, StorageAbstraction &)>(
+           warble::Profile)},
+      {EventType::STREAM,
+       std::function<std::optional<Any>(Any, StorageAbstraction &)>(
+           warble::WarbleStream)},
   };
-  map_.insert(std::make_pair(EventType::REGISTER_USER, registeruser));
-  std::function warble = [&](Any input) -> std::optional<Any> {
-    return warble::WarbleFunc(input);
-  };
-  map_.insert(std::make_pair(EventType::WARBLE, warble));
-  std::function follow = [&](Any input) -> std::optional<Any> {
-    return warble::Follow(input);
-  };
-  map_.insert(std::make_pair(EventType::FOLLOW, follow));
-  std::function read = [&](Any input) -> std::optional<Any> {
-    return warble::Read(input);
-  };
-  map_.insert(std::make_pair(EventType::READ, read));
-  std::function profile = [&](Any input) -> std::optional<Any> {
-    return warble::Profile(input);
-  };
-  map_.insert(std::make_pair(EventType::PROFILE, profile));
-  std::function stream = [&](Any input) -> std::optional<Any> {
-    return warble::WarbleStream(input);
-  };
-  map_.insert(std::make_pair(EventType::STREAM, stream));
 }
 
 void FuncInfra::Hook(const EventType& e) { 
@@ -60,10 +56,14 @@ bool FuncInfra::IsHooked(const EventType& e) {
   return (registeredList_.find(e) != registeredList_.end());
 }
 
-void FuncInfra::EventHandler(const EventType& e, Any input, std::optional<Any>& output) {
+void FuncInfra::EventHandler(const EventType &e, Any input,
+                             std::optional<Any> &output) {
   if (IsHooked(e)) {
-    std::function<std::optional<Any>(Any)> callback = map_[e]; 
-    output = callback(input);
+    std::function<std::optional<Any>(Any, StorageAbstraction &)> callback =
+        map_[e];
+    KeyValueStoreClient func(grpc::CreateChannel(
+        "localhost:50001", grpc::InsecureChannelCredentials()));
+    output = callback(input, func);
   }
 }
 
