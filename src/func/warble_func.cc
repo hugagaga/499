@@ -37,9 +37,7 @@ std::string random_id(size_t length) {
   return str;
 }
 
-bool hasUser(std::string username) {
-  KeyValueStoreClient func(grpc::CreateChannel(
-      "localhost:50001", grpc::InsecureChannelCredentials()));
+bool hasUser(std::string username, StorageAbstraction &func) {
   Key keyMessage;
   keyMessage.set_username(username);
   keyMessage.set_type("username");
@@ -111,16 +109,14 @@ std::vector<Warble> extractWarbles(std::vector<Warble> &warbles,
   return std::vector<Warble>(iter, warbles.end());
 }
 
-std::optional<Any> RegisterUser(Any input) {
+std::optional<Any> RegisterUser(Any input, StorageAbstraction &func) {
   std::optional<Any> ret = std::nullopt;
   // Parse input from Any to request
   RegisteruserRequest request;
   input.UnpackTo(&request);
   std::string username = request.username();
 
-  if (!hasUser(username)) {
-    KeyValueStoreClient func(grpc::CreateChannel(
-        "localhost:50001", grpc::InsecureChannelCredentials()));
+  if (!hasUser(username, func)) {
     Key keyMessage;
     keyMessage.set_username(username);
     keyMessage.set_type("username");
@@ -137,7 +133,7 @@ std::optional<Any> RegisterUser(Any input) {
   return ret;
 }
 
-std::optional<Any> WarbleFunc(Any input) {
+std::optional<Any> WarbleFunc(Any input, StorageAbstraction &func) {
   std::optional<Any> ret = std::nullopt;
   // Parse input from Any to request
   Key keyMessage;
@@ -146,15 +142,13 @@ std::optional<Any> WarbleFunc(Any input) {
   input.UnpackTo(&request);
   std::string username = request.username();
 
-  if (hasUser(username)) {
+  if (hasUser(username, func)) {
     std::string text = request.text();
 
     // Extract hashtags
     std::vector<std::string> hashtagList = extractHashTags(text);
 
     bool isReply = !request.parent_id().empty();
-    KeyValueStoreClient func(grpc::CreateChannel(
-        "localhost:50001", grpc::InsecureChannelCredentials()));
     // Generate a random warble id.
     std::string id = random_id(16);
 
@@ -261,7 +255,7 @@ std::optional<Any> WarbleFunc(Any input) {
   return ret;
 }
 
-std::optional<Any> Follow(Any input) {
+std::optional<Any> Follow(Any input, StorageAbstraction &func) {
   std::optional<Any> ret = std::nullopt;
   // Parse input from Any to request message
   FollowRequest request;
@@ -270,9 +264,7 @@ std::optional<Any> Follow(Any input) {
   std::string to_follow = request.to_follow();
 
   // Check if the user and the to-follow user exist
-  if (hasUser(username) && hasUser(to_follow)) {
-    KeyValueStoreClient func(grpc::CreateChannel(
-        "localhost:50001", grpc::InsecureChannelCredentials()));
+  if (hasUser(username, func) && hasUser(to_follow, func)) {
     Key keyMessage;
     std::string followers;
     std::string following;
@@ -295,7 +287,7 @@ std::optional<Any> Follow(Any input) {
   return ret;
 }
 
-std::optional<Any> Read(Any input) {
+std::optional<Any> Read(Any input, StorageAbstraction &func) {
   std::optional<Any> ret = std::nullopt;
   // Parse input from Any to request message
   ReadRequest request;
@@ -303,9 +295,7 @@ std::optional<Any> Read(Any input) {
   std::string warble_id = request.warble_id();
   std::string user = request.user();
   // Check if the user has registered
-  if (hasUser(user)) {
-    KeyValueStoreClient func(grpc::CreateChannel(
-        "localhost:50001", grpc::InsecureChannelCredentials()));
+  if (hasUser(user, func)) {
     Key keyMessage;
     keyMessage.set_id(warble_id);
     keyMessage.set_type("warble");
@@ -355,20 +345,18 @@ std::optional<Any> Read(Any input) {
   return ret;
 }
 
-std::optional<Any> Profile(Any input) {
+std::optional<Any> Profile(Any input, StorageAbstraction &func) {
   std::optional<Any> ret = std::nullopt;
   // Parse input from Any to request message
   ProfileRequest request;
   input.UnpackTo(&request);
   std::string username = request.username();
   // Check if the user has registered
-  if (hasUser(username)) {
+  if (hasUser(username, func)) {
     Key keyMessage;
     std::string key;
     ProfileReply reply;
 
-    KeyValueStoreClient func(grpc::CreateChannel(
-        "localhost:50001", grpc::InsecureChannelCredentials()));
     keyMessage.set_type("followers");
     keyMessage.set_username(username);
     keyMessage.SerializeToString(&key);
@@ -398,7 +386,7 @@ std::optional<Any> Profile(Any input) {
   return ret;
 }
 
-std::optional<Any> WarbleStream(Any input) {
+std::optional<Any> WarbleStream(Any input, StorageAbstraction &func) {
   std::optional<Any> ret = std::nullopt;
   // Parse input from Any to request message
   StreamRequest request;
@@ -411,8 +399,6 @@ std::optional<Any> WarbleStream(Any input) {
   std::string key;
   StreamReply reply;
 
-  KeyValueStoreClient func(grpc::CreateChannel(
-      "localhost:50001", grpc::InsecureChannelCredentials()));
   keyMessage.set_type("hashtag");
   keyMessage.set_id(hashtag);
   keyMessage.SerializeToString(&key);

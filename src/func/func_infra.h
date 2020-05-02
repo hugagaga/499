@@ -36,7 +36,9 @@ class FuncInfra {
   // A set of all registered event types
   std::unordered_set<EventType> registeredList_;
   // A map to map all event types to functions
-  std::unordered_map<EventType, std::function<std::optional<Any> (Any)>> map_;
+  std::unordered_map<
+      EventType, std::function<std::optional<Any>(Any, StorageAbstraction &)>>
+      map_;
   // Make registeredList_ thread safe
   std::mutex mutex_;
 };

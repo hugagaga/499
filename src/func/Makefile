@@ -37,14 +37,22 @@ server_objects = ../kvstore/kvstore.pb.o\
 				 warble.pb.o\
 				 warble.grpc.pb.o\
 				 func_infra.o\
-				 warble_func.o
+				 warble_func.o\
+
 				
-				 
+test_objects =   ../kvstore/kvstore.pb.o\
+				 ../kvstore/kvstore.grpc.pb.o\
+				 ../kvstore/kvstore_local.o\
+				 ../kvstore/kvmap.o\
+				 warble.pb.o\
+				 warble.grpc.pb.o\
+				 warble_func.o\
+				 warble_func_test.o\
 				 
 
 vpath %.proto $(PROTOS_PATH)
 
-all: warble.pb.cc warble.grpc.pb.cc func_server
+all: warble.pb.cc warble.grpc.pb.cc func_server warble_func_test
 
 warble.grpc.pb.cc:
 	$(PROTOC) -I $(PROTOS_PATH) --grpc_out=. --plugin=protoc-gen-grpc=$(GRPC_CPP_PLUGIN_PATH) warble.proto
@@ -58,6 +66,9 @@ func_server: $(server_objects)
 func_infra_test: func_infra.o func_infra_test.o 
 	$(CXX) -o $@ $^ $(TEST_LD_FLAGS)
 
+warble_func_test: $(test_objects)
+	$(CXX) $(CXXFLAGS) -I . -o $@ $^ $(TEST_LD_FLAGS) $(LDFLAGS)
+
 .PRECIOUS: %.grpc.pb.cc
 %.grpc.pb.cc: %.proto
 	$(PROTOC) -I $(PROTOS_PATH) --grpc_out=. --plugin=protoc-gen-grpc=$(GRPC_CPP_PLUGIN_PATH) $<
@@ -67,4 +78,4 @@ func_infra_test: func_infra.o func_infra_test.o
 	$(PROTOC) -I $(PROTOS_PATH) --cpp_out=. $<
 
 clean:
-	rm -f *.o *.pb.cc *.pb.h func_client func_server 
+	rm -f *.o *.pb.cc *.pb.h func_client func_server warble_func_test
