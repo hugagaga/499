@@ -1,24 +1,14 @@
-#ifndef WARBLE_KVSTORE_CLIENT_H_
-#define WARBLE_KVSTORE_CLIENT_H_
+#ifndef WARBLE_KVSTORE_LOCAL_H_
+#define WARBLE_KVSTORE_LOCAL_H_
 
 #include "storage_abstraction.h"
 
-#include <memory>
-#include <string>
-#include <vector>
+#include "kvmap.h"
 
-#include <grpcpp/grpcpp.h>
-
-#include "kvstore.grpc.pb.h"
-
-using grpc::Channel;
-using grpc::Status;
-using kvstore::KeyValueStore;
-
-// Client class for clients to use key-value store service on the server
-class KeyValueStoreClient : public StorageAbstraction {
+// Local in-memory storage, which would be used for unit tests
+// It has the same abstract class as KeyValueStoreClient class
+class KeyValueStoreLocal : public StorageAbstraction {
 public:
-  KeyValueStoreClient(std::shared_ptr<Channel> channel);
   // Calls function in the server to store key-value
   Status Put(const std::string &key, const std::string &value) override;
   // Get a value or values to one key
@@ -32,10 +22,9 @@ public:
       std::vector<std::vector<std::string>> &values) override;
   // Remove values associated to the key in the server
   Status Remove(const std::string &key) override;
-
 private:
-  // KeyValueStore client stub to start RPC call.
-  std::unique_ptr<KeyValueStore::Stub> stub_;
+  // Kvmap objects that contains kvstore functions
+  kvstore::Kvmap kvstore_;
 };
 
-#endif // WARBLE_KVSTORE_CLIENT_H_
+#endif // WARBLE_KVSTORE_LOCAL_H_
