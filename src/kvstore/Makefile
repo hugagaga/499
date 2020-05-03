@@ -33,12 +33,15 @@ PROTOS_PATH = ../../protos
 
 vpath %.proto $(PROTOS_PATH)
 
-all: kvstore_server kvmap_test
+all: kvstore_server kvmap_test kvstore_local
 
 kvstore_server: kvstore.pb.o kvstore.grpc.pb.o kvmap.o kvstore_server.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-kvmap_test: kvstore.pb.o kvstore.grpc.pb.o kvmap.o kvmap_test.o 
+kvstore_local: kvstore_local.cc kvstore.grpc.pb.o kvmap.o
+	$(CXX) $(CXXFLAGS) -c kvstore_local.cc
+
+kvmap_test: kvstore.pb.o kvstore.grpc.pb.o kvmap.o kvmap_test.o
 	$(CXX) $^ $(TEST_LD_FLAGS) -o $@
 
 .PRECIOUS: %.grpc.pb.cc
@@ -50,4 +53,4 @@ kvmap_test: kvstore.pb.o kvstore.grpc.pb.o kvmap.o kvmap_test.o
 	$(PROTOC) -I $(PROTOS_PATH) --cpp_out=. $<
 
 clean:
-	rm -f *.o *.pb.cc *.pb.h kvstore_client kvstore_server kvmap kvmap_test
+	rm -f *.o *.pb.cc *.pb.h kvstore_client kvstore_local kvstore_server kvmap kvmap_test
