@@ -118,3 +118,7 @@ Shows all warbles posted that contain #hashtag after stream() call.
 ```
 ./kvstore/kvmap_test
 ```
+* test for warble stream function
+```
+./func/warble_func_test
+```
