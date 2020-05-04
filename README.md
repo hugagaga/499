@@ -78,7 +78,8 @@ A Twitter-like command line C++ application built on the Faas Platform that comm
 ### Run code
 1. Start back-end Key-Value Store Server   
 ```
-./kvstore/kvstore_server
+//--store flag for Key-value store disk persistence
+./kvstore/kvstore_server (--store filename)
 ```
 2. Start Faas platform Fuuc Server 
 ``` 
